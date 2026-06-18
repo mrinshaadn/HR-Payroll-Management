@@ -139,10 +139,40 @@ export const leaveService = {
 
   cancelLeaveRequest: async (requestId: string): Promise<boolean> => {
     try {
-      await api.delete(`/leave-requests/${requestId}/`);
+      await api.post(`/leave-requests/${requestId}/cancel/`);
       return true;
     } catch (error) {
       console.error('Error canceling leave request:', error);
+      return false;
+    }
+  },
+
+  createLeaveType: async (data: { name: string; description?: string; max_days_per_year?: number; is_paid_leave?: boolean }): Promise<any> => {
+    try {
+      const response = await api.post('/leave-types/', data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating leave category:', error);
+      return null;
+    }
+  },
+
+  updateLeaveType: async (id: number, data: { name: string; description?: string; max_days_per_year?: number; is_paid_leave?: boolean }): Promise<any> => {
+    try {
+      const response = await api.put(`/leave-types/${id}/`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating leave category:', error);
+      return null;
+    }
+  },
+
+  deleteLeaveType: async (id: number): Promise<boolean> => {
+    try {
+      await api.delete(`/leave-types/${id}/`);
+      return true;
+    } catch (error) {
+      console.error('Error deleting leave category:', error);
       return false;
     }
   },

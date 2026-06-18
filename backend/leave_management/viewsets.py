@@ -44,3 +44,20 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
                 queryset = queryset.none()
                 
         return queryset
+
+    from rest_framework.decorators import action
+    from rest_framework.response import Response
+    from rest_framework import status
+
+    @action(detail=True, methods=['post'])
+    def cancel(self, request, pk=None):
+        leave_request = self.get_object()
+        if leave_request.status != LeaveRequest.Status.PENDING:
+            return Response(
+                {"detail": f"Only pending leave requests can be cancelled. Current status: {leave_request.status}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        leave_request.status = LeaveRequest.Status.CANCELLED
+        leave_request.save()
+        serializer = self.get_serializer(leave_request)
+        return Response(serializer.data)

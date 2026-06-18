@@ -287,17 +287,26 @@ export const HRProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   const addLeaveRequest = async (req: Omit<LeaveRequest, 'id' | 'status'>) => {
     setIsLoading(true);
-    // Parse duration string to determine start/end dates if not format YYYY-MM-DD
-    const todayStr = new Date().toISOString().split('T')[0];
-    const durationNum = parseInt(req.duration) || 1;
-    const endDateObj = new Date();
-    endDateObj.setDate(endDateObj.getDate() + durationNum - 1);
-    const endDateStr = endDateObj.toISOString().split('T')[0];
+    let startDateVal = new Date().toISOString().split('T')[0];
+    let endDateVal = startDateVal;
+
+    if (req.dates && req.dates.includes(' - ')) {
+      const parts = req.dates.split(' - ');
+      if (parts[0] && parts[1]) {
+        startDateVal = parts[0].trim();
+        endDateVal = parts[1].trim();
+      }
+    } else {
+      const durationNum = parseInt(req.duration) || 1;
+      const endDateObj = new Date();
+      endDateObj.setDate(endDateObj.getDate() + durationNum - 1);
+      endDateVal = endDateObj.toISOString().split('T')[0];
+    }
 
     const added = await leaveService.applyLeave({
       leaveType: req.leaveType,
-      startDate: todayStr,
-      endDate: endDateStr,
+      startDate: startDateVal,
+      endDate: endDateVal,
       reason: req.reason,
     });
     setIsLoading(false);

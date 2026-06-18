@@ -48,11 +48,11 @@ export interface LeaveRequest {
   id: string;
   employeeName: string;
   employeeAvatar: string;
-  leaveType: 'Annual Leave' | 'Sick Leave' | 'Casual Leave' | 'Personal Leave' | 'Parental Leave';
+  leaveType: string;
   reason: string;
   dates: string;
   duration: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'Pending' | 'Approved' | 'Rejected' | 'Cancelled';
 }
 
 export interface AttendanceRecord {
