@@ -1,0 +1,6 @@
+{
+  "name": "HR Flow",
+  "description": "Enterprise-grade HR and Payroll Management System featuring integrated dashboard analytics, leave tracking, live attendance monitoring, dynamic payroll processing, talent recruitment pipeline, document intelligence, and comprehensive employee profiling.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

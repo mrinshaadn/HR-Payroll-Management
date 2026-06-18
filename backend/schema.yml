@@ -1,0 +1,6175 @@
+openapi: 3.0.3
+info:
+  title: HRMS (HR Flow) Backend API
+  version: 1.0.0
+  description: Comprehensive REST API documentation for the Human Resource Management
+    System (HRMS) backend.
+paths:
+  /api/accounts/profile/:
+    get:
+      operationId: accounts_profile_retrieve
+      summary: Get user profile details
+      tags:
+      - Authentication
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+          description: ''
+  /api/analytics/attendance/:
+    get:
+      operationId: analytics_attendance_retrieve
+      description: Returns daily counts, rates, monthly trends, and department-wise
+        attendance averages.
+      summary: Get Attendance Analytics
+      tags:
+      - Analytics
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceAnalyticsResponse'
+          description: ''
+  /api/analytics/charts/:
+    get:
+      operationId: analytics_charts_retrieve
+      description: Returns historical monthly coordinates for growth, payout, and
+        candidate charts.
+      summary: Get Chart Metrics Analytics
+      tags:
+      - Analytics
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChartsAnalyticsResponse'
+          description: ''
+  /api/analytics/dashboard/:
+    get:
+      operationId: analytics_dashboard_retrieve
+      description: Returns aggregate KPI overview metrics for the landing dashboard.
+      summary: Get Dashboard Overview Analytics
+      tags:
+      - Analytics
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardAnalyticsResponse'
+          description: ''
+  /api/analytics/documents/:
+    get:
+      operationId: analytics_documents_retrieve
+      description: Returns counts of active files by category and completeness rates
+        of employee documents.
+      summary: Get Document Analytics
+      tags:
+      - Analytics
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentAnalyticsResponse'
+          description: ''
+  /api/analytics/employees/:
+    get:
+      operationId: analytics_employees_retrieve
+      description: Returns breakdowns of employees by status, department, designation,
+        and gender.
+      summary: Get Employee Analytics
+      tags:
+      - Analytics
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeAnalyticsResponse'
+          description: ''
+  /api/analytics/leave/:
+    get:
+      operationId: analytics_leave_retrieve
+      description: Returns statistics on leave request statuses, monthly trends, and
+        department ratios.
+      summary: Get Leave Analytics
+      tags:
+      - Analytics
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveAnalyticsResponse'
+          description: ''
+  /api/analytics/overview/:
+    get:
+      operationId: analytics_overview_retrieve
+      description: Returns consolidated key performance indicators overview.
+      summary: Get Alternative Overview Analytics
+      tags:
+      - Analytics
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OverviewAnalyticsResponse'
+          description: ''
+  /api/analytics/payroll/:
+    get:
+      operationId: analytics_payroll_retrieve
+      description: Returns payroll costs, average payouts, tax summaries, and department
+        distributions.
+      summary: Get Payroll Analytics
+      tags:
+      - Analytics
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayrollAnalyticsResponse'
+          description: ''
+  /api/analytics/recruitment/:
+    get:
+      operationId: analytics_recruitment_retrieve
+      description: Returns recruitment vacancy counts, candidates, and funnel stages
+        statistics.
+      summary: Get Recruitment Analytics
+      tags:
+      - Analytics
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecruitmentAnalyticsResponse'
+          description: ''
+  /api/attendance/:
+    get:
+      operationId: attendance_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - attendance
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Attendance'
+          description: ''
+    post:
+      operationId: attendance_create
+      tags:
+      - attendance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AttendanceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttendanceRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+          description: ''
+  /api/attendance/{id}/:
+    get:
+      operationId: attendance_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this attendance.
+        required: true
+      tags:
+      - attendance
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+          description: ''
+    put:
+      operationId: attendance_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this attendance.
+        required: true
+      tags:
+      - attendance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AttendanceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttendanceRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+          description: ''
+    patch:
+      operationId: attendance_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this attendance.
+        required: true
+      tags:
+      - attendance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAttendanceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAttendanceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAttendanceRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+          description: ''
+    delete:
+      operationId: attendance_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this attendance.
+        required: true
+      tags:
+      - attendance
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/attendance/clock-in/:
+    post:
+      operationId: attendance_clock_in_create
+      description: Allows an employee to clock in once per day.
+      summary: Clock In
+      tags:
+      - Attendance
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+          description: ''
+  /api/attendance/clock-out/:
+    post:
+      operationId: attendance_clock_out_create
+      description: Clocks out the logged-in employee for the current day and calculates
+        working hours.
+      summary: Clock Out
+      tags:
+      - Attendance
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+          description: ''
+  /api/attendance/history/:
+    get:
+      operationId: attendance_history_list
+      description: Retrieves history of attendance. Employees only see their own,
+        while HR/Admin can see and filter all.
+      summary: Get Attendance History
+      parameters:
+      - in: query
+        name: employee_id
+        schema:
+          type: string
+        description: Filter by Employee ID (HR/Admin only)
+      - in: query
+        name: end_date
+        schema:
+          type: string
+        description: Filter by end date (YYYY-MM-DD)
+      - in: query
+        name: start_date
+        schema:
+          type: string
+        description: Filter by start date (YYYY-MM-DD)
+      - in: query
+        name: status
+        schema:
+          type: string
+        description: Filter by attendance status
+      tags:
+      - Attendance
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Attendance'
+          description: ''
+  /api/attendance/monthly-summary/:
+    get:
+      operationId: attendance_monthly_summary_retrieve
+      description: Calculates and returns attendance summary stats for the selected
+        employee and month.
+      summary: Get Monthly Attendance Summary
+      parameters:
+      - in: query
+        name: employee_id
+        schema:
+          type: string
+        description: Employee ID
+      - in: query
+        name: month
+        schema:
+          type: integer
+        description: Month
+      - in: query
+        name: year
+        schema:
+          type: integer
+        description: Year
+      tags:
+      - Attendance
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceMonthlySummary'
+          description: ''
+  /api/attendance/today/:
+    get:
+      operationId: attendance_today_retrieve
+      description: Retrieves the current clock-in/out status for the logged-in employee
+        for today.
+      summary: Get Today's Attendance Status
+      tags:
+      - Attendance
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+          description: ''
+  /api/auth/me/:
+    get:
+      operationId: auth_me_retrieve
+      description: Returns authenticated user info, role, and permission array for
+        frontend auth.
+      summary: Get current user details and permissions
+      tags:
+      - Authentication
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+          description: ''
+  /api/auth/permissions/:
+    get:
+      operationId: auth_permissions_list
+      description: Returns array of permissions (strings) assigned to the current
+        user's role.
+      summary: Get user permission identifiers directly
+      tags:
+      - Authentication
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+          description: ''
+  /api/auth/token/:
+    post:
+      operationId: auth_token_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/auth/token/refresh/:
+    post:
+      operationId: auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/departments/:
+    get:
+      operationId: departments_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - departments
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDepartmentList'
+          description: ''
+    post:
+      operationId: departments_create
+      tags:
+      - departments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepartmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DepartmentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DepartmentRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+          description: ''
+  /api/departments/{id}/:
+    get:
+      operationId: departments_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this department.
+        required: true
+      tags:
+      - departments
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+          description: ''
+    put:
+      operationId: departments_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this department.
+        required: true
+      tags:
+      - departments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepartmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DepartmentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DepartmentRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+          description: ''
+    patch:
+      operationId: departments_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this department.
+        required: true
+      tags:
+      - departments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDepartmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDepartmentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDepartmentRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+          description: ''
+    delete:
+      operationId: departments_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this department.
+        required: true
+      tags:
+      - departments
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/designations/:
+    get:
+      operationId: designations_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - designations
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDesignationList'
+          description: ''
+    post:
+      operationId: designations_create
+      tags:
+      - designations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DesignationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DesignationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DesignationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Designation'
+          description: ''
+  /api/designations/{id}/:
+    get:
+      operationId: designations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this designation.
+        required: true
+      tags:
+      - designations
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Designation'
+          description: ''
+    put:
+      operationId: designations_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this designation.
+        required: true
+      tags:
+      - designations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DesignationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DesignationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DesignationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Designation'
+          description: ''
+    patch:
+      operationId: designations_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this designation.
+        required: true
+      tags:
+      - designations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDesignationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDesignationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDesignationRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Designation'
+          description: ''
+    delete:
+      operationId: designations_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this designation.
+        required: true
+      tags:
+      - designations
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/documents/:
+    get:
+      operationId: documents_list
+      parameters:
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+          description: ''
+    post:
+      operationId: documents_create
+      tags:
+      - documents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DocumentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DocumentRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+  /api/documents/{id}/:
+    get:
+      operationId: documents_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this document.
+        required: true
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+    put:
+      operationId: documents_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this document.
+        required: true
+      tags:
+      - documents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DocumentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DocumentRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+    patch:
+      operationId: documents_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this document.
+        required: true
+      tags:
+      - documents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+    delete:
+      operationId: documents_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this document.
+        required: true
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/documents/archive/:
+    post:
+      operationId: documents_archive_create
+      description: Sets document status to ARCHIVED (HR/Admin only).
+      summary: Archive Document
+      tags:
+      - Documents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArchiveDocumentRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ArchiveDocumentRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ArchiveDocumentRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+  /api/documents/categories/:
+    get:
+      operationId: documents_categories_list
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentCategory'
+          description: ''
+    post:
+      operationId: documents_categories_create
+      tags:
+      - documents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentCategoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DocumentCategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DocumentCategoryRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentCategory'
+          description: ''
+  /api/documents/categories/{id}/:
+    get:
+      operationId: documents_categories_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this document category.
+        required: true
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentCategory'
+          description: ''
+    put:
+      operationId: documents_categories_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this document category.
+        required: true
+      tags:
+      - documents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentCategoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DocumentCategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DocumentCategoryRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentCategory'
+          description: ''
+    patch:
+      operationId: documents_categories_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this document category.
+        required: true
+      tags:
+      - documents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentCategoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentCategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentCategoryRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentCategory'
+          description: ''
+    delete:
+      operationId: documents_categories_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this document category.
+        required: true
+      tags:
+      - documents
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/documents/download/:
+    get:
+      operationId: documents_download_retrieve
+      description: Securely serves the document file as attachment for download.
+      summary: Download Document
+      parameters:
+      - in: query
+        name: document_id
+        schema:
+          type: integer
+        description: Document ID
+      tags:
+      - Documents
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/documents/employee/{employee_id}/:
+    get:
+      operationId: documents_employee_list
+      description: Returns all active documents associated with the given Employee
+        profile.
+      summary: Get Employee Documents
+      parameters:
+      - in: path
+        name: employee_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Documents
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+          description: ''
+  /api/documents/logs/:
+    get:
+      operationId: documents_logs_list
+      description: Returns full audit trail of document uploads, downloads, updates,
+        and deletions (HR/Admin only).
+      summary: Get Document Activity Logs
+      tags:
+      - Documents
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentAccessLog'
+          description: ''
+  /api/documents/restore/:
+    post:
+      operationId: documents_restore_create
+      description: Restores archived document status back to ACTIVE (HR/Admin only).
+      summary: Restore Document
+      tags:
+      - Documents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestoreDocumentRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RestoreDocumentRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RestoreDocumentRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+  /api/documents/upload/:
+    post:
+      operationId: documents_upload_create
+      description: Uploads a new document file and auto-saves metadata (HR/Admin only).
+      summary: Upload Document
+      tags:
+      - Documents
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UploadDocumentRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UploadDocumentRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+  /api/employees/:
+    get:
+      operationId: employees_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - employees
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEmployeeList'
+          description: ''
+    post:
+      operationId: employees_create
+      tags:
+      - employees
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmployeeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmployeeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+          description: ''
+  /api/employees/{employee_id}/:
+    get:
+      operationId: employees_retrieve
+      parameters:
+      - in: path
+        name: employee_id
+        schema:
+          type: string
+        description: A unique value identifying this employee.
+        required: true
+      tags:
+      - employees
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+          description: ''
+    put:
+      operationId: employees_update
+      parameters:
+      - in: path
+        name: employee_id
+        schema:
+          type: string
+        description: A unique value identifying this employee.
+        required: true
+      tags:
+      - employees
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmployeeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmployeeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+          description: ''
+    patch:
+      operationId: employees_partial_update
+      parameters:
+      - in: path
+        name: employee_id
+        schema:
+          type: string
+        description: A unique value identifying this employee.
+        required: true
+      tags:
+      - employees
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEmployeeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEmployeeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEmployeeRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+          description: ''
+    delete:
+      operationId: employees_destroy
+      parameters:
+      - in: path
+        name: employee_id
+        schema:
+          type: string
+        description: A unique value identifying this employee.
+        required: true
+      tags:
+      - employees
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/leave-balances/:
+    get:
+      operationId: leave_balances_list
+      tags:
+      - leave-balances
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaveBalance'
+          description: ''
+    post:
+      operationId: leave_balances_create
+      tags:
+      - leave-balances
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveBalanceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LeaveBalanceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LeaveBalanceRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveBalance'
+          description: ''
+  /api/leave-balances/{id}/:
+    get:
+      operationId: leave_balances_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this leave balance.
+        required: true
+      tags:
+      - leave-balances
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveBalance'
+          description: ''
+    put:
+      operationId: leave_balances_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this leave balance.
+        required: true
+      tags:
+      - leave-balances
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveBalanceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LeaveBalanceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LeaveBalanceRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveBalance'
+          description: ''
+    patch:
+      operationId: leave_balances_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this leave balance.
+        required: true
+      tags:
+      - leave-balances
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedLeaveBalanceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedLeaveBalanceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedLeaveBalanceRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveBalance'
+          description: ''
+    delete:
+      operationId: leave_balances_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this leave balance.
+        required: true
+      tags:
+      - leave-balances
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/leave-reports/:
+    get:
+      operationId: leave_reports_retrieve
+      description: Generates statistics on leave requests across departments (HR/Admin
+        only).
+      summary: Get Leave Reports
+      parameters:
+      - in: query
+        name: year
+        schema:
+          type: integer
+        description: Report Year
+      tags:
+      - Leave Management
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveReportsResponse'
+          description: ''
+  /api/leave-requests/:
+    get:
+      operationId: leave_requests_list
+      tags:
+      - leave-requests
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaveRequest'
+          description: ''
+    post:
+      operationId: leave_requests_create
+      tags:
+      - leave-requests
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+          description: ''
+  /api/leave-requests/{id}/:
+    get:
+      operationId: leave_requests_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this leave request.
+        required: true
+      tags:
+      - leave-requests
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+          description: ''
+    put:
+      operationId: leave_requests_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this leave request.
+        required: true
+      tags:
+      - leave-requests
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+          description: ''
+    patch:
+      operationId: leave_requests_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this leave request.
+        required: true
+      tags:
+      - leave-requests
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedLeaveRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedLeaveRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedLeaveRequestRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+          description: ''
+    delete:
+      operationId: leave_requests_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this leave request.
+        required: true
+      tags:
+      - leave-requests
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/leave-requests/apply/:
+    post:
+      operationId: leave_requests_apply_create
+      description: Submits a leave request for the authenticated employee after validating
+        dates and balance.
+      summary: Apply for Leave
+      tags:
+      - Leave Management
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplyLeaveRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ApplyLeaveRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ApplyLeaveRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+          description: ''
+  /api/leave-requests/approve/:
+    post:
+      operationId: leave_requests_approve_create
+      description: Approves a pending leave request, deducting remaining balance days
+        (HR/Admin only).
+      summary: Approve Leave Request
+      tags:
+      - Leave Management
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveLeaveRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ApproveLeaveRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ApproveLeaveRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+          description: ''
+  /api/leave-requests/history/:
+    get:
+      operationId: leave_requests_history_list
+      description: Retrieves list of leave requests. Regular employees only see their
+        own.
+      summary: Get Leave Request History
+      parameters:
+      - in: query
+        name: employee_id
+        schema:
+          type: string
+        description: Filter by Employee ID (HR/Admin only)
+      - in: query
+        name: status
+        schema:
+          type: string
+        description: Filter by status
+      tags:
+      - Leave Management
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaveRequest'
+          description: ''
+  /api/leave-requests/reject/:
+    post:
+      operationId: leave_requests_reject_create
+      description: Rejects a pending leave request (HR/Admin only).
+      summary: Reject Leave Request
+      tags:
+      - Leave Management
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectLeaveRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RejectLeaveRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RejectLeaveRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+          description: ''
+  /api/leave-types/:
+    get:
+      operationId: leave_types_list
+      tags:
+      - leave-types
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaveType'
+          description: ''
+    post:
+      operationId: leave_types_create
+      tags:
+      - leave-types
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LeaveTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LeaveTypeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveType'
+          description: ''
+  /api/leave-types/{id}/:
+    get:
+      operationId: leave_types_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this leave type.
+        required: true
+      tags:
+      - leave-types
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveType'
+          description: ''
+    put:
+      operationId: leave_types_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this leave type.
+        required: true
+      tags:
+      - leave-types
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LeaveTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LeaveTypeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveType'
+          description: ''
+    patch:
+      operationId: leave_types_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this leave type.
+        required: true
+      tags:
+      - leave-types
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedLeaveTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedLeaveTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedLeaveTypeRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveType'
+          description: ''
+    delete:
+      operationId: leave_types_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this leave type.
+        required: true
+      tags:
+      - leave-types
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/payroll/monthly-summary/:
+    get:
+      operationId: payroll_monthly_summary_list
+      description: Returns payroll history details. Employees can only see their own
+        payslips/details.
+      summary: Get Personal/Company Payroll History
+      tags:
+      - Payroll
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payroll'
+          description: ''
+  /api/payroll/process/:
+    post:
+      operationId: payroll_process_create
+      description: Generates or overrides monthly payroll entries for all or a specific
+        employee.
+      summary: Process Monthly Payroll
+      tags:
+      - Payroll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessPayrollRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProcessPayrollRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProcessPayrollRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessPayrollResponse'
+          description: ''
+  /api/payroll/reports/:
+    get:
+      operationId: payroll_reports_retrieve
+      description: Provides monthly gross salary, tax, provident fund, and net payout
+        aggregations.
+      summary: Get Payroll Reports
+      parameters:
+      - in: query
+        name: month
+        schema:
+          type: integer
+        description: Filter by month
+      - in: query
+        name: year
+        schema:
+          type: integer
+        description: Filter by year
+      tags:
+      - Payroll
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayrollReportsResponse'
+          description: ''
+  /api/payrolls/:
+    get:
+      operationId: payrolls_list
+      tags:
+      - payrolls
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payroll'
+          description: ''
+    post:
+      operationId: payrolls_create
+      tags:
+      - payrolls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayrollRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PayrollRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PayrollRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payroll'
+          description: ''
+  /api/payrolls/{id}/:
+    get:
+      operationId: payrolls_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this payroll.
+        required: true
+      tags:
+      - payrolls
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payroll'
+          description: ''
+    put:
+      operationId: payrolls_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this payroll.
+        required: true
+      tags:
+      - payrolls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayrollRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PayrollRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PayrollRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payroll'
+          description: ''
+    patch:
+      operationId: payrolls_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this payroll.
+        required: true
+      tags:
+      - payrolls
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPayrollRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPayrollRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPayrollRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payroll'
+          description: ''
+    delete:
+      operationId: payrolls_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this payroll.
+        required: true
+      tags:
+      - payrolls
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/payslips/:
+    get:
+      operationId: payslips_list
+      tags:
+      - payslips
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payslip'
+          description: ''
+    post:
+      operationId: payslips_create
+      tags:
+      - payslips
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayslipRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PayslipRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PayslipRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payslip'
+          description: ''
+  /api/payslips/{id}/:
+    get:
+      operationId: payslips_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this payslip.
+        required: true
+      tags:
+      - payslips
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payslip'
+          description: ''
+    put:
+      operationId: payslips_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this payslip.
+        required: true
+      tags:
+      - payslips
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayslipRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PayslipRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PayslipRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payslip'
+          description: ''
+    patch:
+      operationId: payslips_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this payslip.
+        required: true
+      tags:
+      - payslips
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPayslipRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPayslipRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPayslipRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payslip'
+          description: ''
+    delete:
+      operationId: payslips_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this payslip.
+        required: true
+      tags:
+      - payslips
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/recruitment/analytics/:
+    get:
+      operationId: recruitment_analytics_retrieve
+      description: Aggregates and returns recruitment metrics summary.
+      summary: Get Recruitment Analytics
+      tags:
+      - Recruitment
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecruitmentModuleAnalyticsResponse'
+          description: ''
+  /api/recruitment/candidates/:
+    get:
+      operationId: recruitment_candidates_list
+      parameters:
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - recruitment
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Candidate'
+          description: ''
+    post:
+      operationId: recruitment_candidates_create
+      tags:
+      - recruitment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CandidateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CandidateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CandidateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Candidate'
+          description: ''
+  /api/recruitment/candidates/{id}/:
+    get:
+      operationId: recruitment_candidates_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this candidate.
+        required: true
+      tags:
+      - recruitment
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Candidate'
+          description: ''
+    put:
+      operationId: recruitment_candidates_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this candidate.
+        required: true
+      tags:
+      - recruitment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CandidateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CandidateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CandidateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Candidate'
+          description: ''
+    patch:
+      operationId: recruitment_candidates_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this candidate.
+        required: true
+      tags:
+      - recruitment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCandidateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCandidateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCandidateRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Candidate'
+          description: ''
+    delete:
+      operationId: recruitment_candidates_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this candidate.
+        required: true
+      tags:
+      - recruitment
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/recruitment/candidates/shortlist/:
+    post:
+      operationId: recruitment_candidates_shortlist_create
+      description: Updates candidate status to SHORTLISTED and logs a stage progress
+        entry.
+      summary: Shortlist Candidate
+      tags:
+      - Recruitment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShortlistCandidateRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ShortlistCandidateRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ShortlistCandidateRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Candidate'
+          description: ''
+  /api/recruitment/interviews/:
+    get:
+      operationId: recruitment_interviews_list
+      tags:
+      - recruitment
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Interview'
+          description: ''
+    post:
+      operationId: recruitment_interviews_create
+      tags:
+      - recruitment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterviewRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InterviewRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InterviewRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interview'
+          description: ''
+  /api/recruitment/interviews/{id}/:
+    get:
+      operationId: recruitment_interviews_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this interview.
+        required: true
+      tags:
+      - recruitment
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interview'
+          description: ''
+    put:
+      operationId: recruitment_interviews_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this interview.
+        required: true
+      tags:
+      - recruitment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterviewRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InterviewRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InterviewRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interview'
+          description: ''
+    patch:
+      operationId: recruitment_interviews_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this interview.
+        required: true
+      tags:
+      - recruitment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedInterviewRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedInterviewRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedInterviewRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interview'
+          description: ''
+    delete:
+      operationId: recruitment_interviews_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this interview.
+        required: true
+      tags:
+      - recruitment
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/recruitment/interviews/schedule/:
+    post:
+      operationId: recruitment_interviews_schedule_create
+      description: Schedules a phone/online/offline interview session with a selected
+        interviewer.
+      summary: Schedule Candidate Interview
+      tags:
+      - Recruitment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleInterviewRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ScheduleInterviewRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ScheduleInterviewRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interview'
+          description: ''
+  /api/recruitment/jobs/:
+    get:
+      operationId: recruitment_jobs_list
+      tags:
+      - recruitment
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobOpening'
+          description: ''
+    post:
+      operationId: recruitment_jobs_create
+      tags:
+      - recruitment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobOpeningRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/JobOpeningRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/JobOpeningRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobOpening'
+          description: ''
+  /api/recruitment/jobs/{id}/:
+    get:
+      operationId: recruitment_jobs_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this job opening.
+        required: true
+      tags:
+      - recruitment
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobOpening'
+          description: ''
+    put:
+      operationId: recruitment_jobs_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this job opening.
+        required: true
+      tags:
+      - recruitment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobOpeningRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/JobOpeningRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/JobOpeningRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobOpening'
+          description: ''
+    patch:
+      operationId: recruitment_jobs_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this job opening.
+        required: true
+      tags:
+      - recruitment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedJobOpeningRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedJobOpeningRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedJobOpeningRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobOpening'
+          description: ''
+    delete:
+      operationId: recruitment_jobs_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this job opening.
+        required: true
+      tags:
+      - recruitment
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/recruitment/jobs/open/:
+    get:
+      operationId: recruitment_jobs_open_list
+      description: Returns list of all recruitment job openings currently in OPEN
+        status.
+      summary: Get Open Job Openings
+      tags:
+      - Recruitment
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobOpening'
+          description: ''
+  /api/recruitment/reports/:
+    get:
+      operationId: recruitment_reports_retrieve
+      description: Generates recruitment funnel stages statistics and ratios.
+      summary: Get Recruitment Funnel Reports
+      tags:
+      - Recruitment
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecruitmentModuleReportsResponse'
+          description: ''
+  /api/recruitment/stages/:
+    get:
+      operationId: recruitment_stages_list
+      tags:
+      - recruitment
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecruitmentStage'
+          description: ''
+    post:
+      operationId: recruitment_stages_create
+      tags:
+      - recruitment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecruitmentStageRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RecruitmentStageRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecruitmentStageRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecruitmentStage'
+          description: ''
+  /api/recruitment/stages/{id}/:
+    get:
+      operationId: recruitment_stages_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this recruitment stage.
+        required: true
+      tags:
+      - recruitment
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecruitmentStage'
+          description: ''
+    put:
+      operationId: recruitment_stages_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this recruitment stage.
+        required: true
+      tags:
+      - recruitment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecruitmentStageRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RecruitmentStageRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecruitmentStageRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecruitmentStage'
+          description: ''
+    patch:
+      operationId: recruitment_stages_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this recruitment stage.
+        required: true
+      tags:
+      - recruitment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRecruitmentStageRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRecruitmentStageRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRecruitmentStageRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecruitmentStage'
+          description: ''
+    delete:
+      operationId: recruitment_stages_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this recruitment stage.
+        required: true
+      tags:
+      - recruitment
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/salary-structures/:
+    get:
+      operationId: salary_structures_list
+      parameters:
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - salary-structures
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SalaryStructure'
+          description: ''
+    post:
+      operationId: salary_structures_create
+      tags:
+      - salary-structures
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalaryStructureRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SalaryStructureRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SalaryStructureRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryStructure'
+          description: ''
+  /api/salary-structures/{id}/:
+    get:
+      operationId: salary_structures_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this salary structure.
+        required: true
+      tags:
+      - salary-structures
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryStructure'
+          description: ''
+    put:
+      operationId: salary_structures_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this salary structure.
+        required: true
+      tags:
+      - salary-structures
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalaryStructureRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SalaryStructureRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SalaryStructureRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryStructure'
+          description: ''
+    patch:
+      operationId: salary_structures_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this salary structure.
+        required: true
+      tags:
+      - salary-structures
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSalaryStructureRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSalaryStructureRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSalaryStructureRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryStructure'
+          description: ''
+    delete:
+      operationId: salary_structures_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this salary structure.
+        required: true
+      tags:
+      - salary-structures
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/shifts/:
+    get:
+      operationId: shifts_list
+      tags:
+      - shifts
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Shift'
+          description: ''
+    post:
+      operationId: shifts_create
+      tags:
+      - shifts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShiftRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ShiftRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ShiftRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+          description: ''
+  /api/shifts/{id}/:
+    get:
+      operationId: shifts_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this shift.
+        required: true
+      tags:
+      - shifts
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+          description: ''
+    put:
+      operationId: shifts_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this shift.
+        required: true
+      tags:
+      - shifts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShiftRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ShiftRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ShiftRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+          description: ''
+    patch:
+      operationId: shifts_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this shift.
+        required: true
+      tags:
+      - shifts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedShiftRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedShiftRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedShiftRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+          description: ''
+    delete:
+      operationId: shifts_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this shift.
+        required: true
+      tags:
+      - shifts
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+components:
+  schemas:
+    ActionEnum:
+      enum:
+      - View
+      - Download
+      - Upload
+      - Update
+      - Delete
+      type: string
+      description: |-
+        * `View` - View
+        * `Download` - Download
+        * `Upload` - Upload
+        * `Update` - Update
+        * `Delete` - Delete
+    ApplyLeaveRequestRequest:
+      type: object
+      properties:
+        leave_type:
+          type: integer
+          description: LeaveType ID
+        start_date:
+          type: string
+          minLength: 1
+          description: Start Date (YYYY-MM-DD)
+        end_date:
+          type: string
+          minLength: 1
+          description: End Date (YYYY-MM-DD)
+        reason:
+          type: string
+          minLength: 1
+      required:
+      - end_date
+      - leave_type
+      - start_date
+    ApproveLeaveRequestRequest:
+      type: object
+      properties:
+        request_id:
+          type: integer
+          description: LeaveRequest ID
+      required:
+      - request_id
+    ArchiveDocumentRequestRequest:
+      type: object
+      properties:
+        document_id:
+          type: integer
+      required:
+      - document_id
+    Attendance:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        employee:
+          type: string
+        employee_name:
+          type: string
+          readOnly: true
+        employee_last_name:
+          type: string
+          readOnly: true
+        employee_code:
+          type: string
+          readOnly: true
+        date:
+          type: string
+          format: date
+        clock_in:
+          type: string
+          format: date-time
+          nullable: true
+        clock_out:
+          type: string
+          format: date-time
+          nullable: true
+        total_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        overtime_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        attendance_status:
+          $ref: '#/components/schemas/AttendanceStatusEnum'
+        remarks:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - date
+      - employee
+      - employee_code
+      - employee_last_name
+      - employee_name
+      - id
+      - overtime_hours
+      - total_hours
+      - updated_at
+    AttendanceAnalyticsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+        data:
+          $ref: '#/components/schemas/AttendanceAnalyticsResponseData'
+      required:
+      - data
+    AttendanceAnalyticsResponseData:
+      type: object
+      properties:
+        present_today:
+          type: integer
+        absent_today:
+          type: integer
+        late_today:
+          type: integer
+        present_percentage:
+          type: number
+          format: double
+        monthly_trends:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        department_stats:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - absent_today
+      - department_stats
+      - late_today
+      - monthly_trends
+      - present_percentage
+      - present_today
+    AttendanceMonthlySummary:
+      type: object
+      properties:
+        present_days:
+          type: integer
+        absent_days:
+          type: integer
+        late_days:
+          type: integer
+        half_days:
+          type: integer
+        leave_days:
+          type: integer
+        total_working_hours:
+          type: number
+          format: double
+        overtime_hours:
+          type: number
+          format: double
+      required:
+      - absent_days
+      - half_days
+      - late_days
+      - leave_days
+      - overtime_hours
+      - present_days
+      - total_working_hours
+    AttendanceRequest:
+      type: object
+      properties:
+        employee:
+          type: string
+          minLength: 1
+        date:
+          type: string
+          format: date
+        clock_in:
+          type: string
+          format: date-time
+          nullable: true
+        clock_out:
+          type: string
+          format: date-time
+          nullable: true
+        attendance_status:
+          $ref: '#/components/schemas/AttendanceStatusEnum'
+        remarks:
+          type: string
+          nullable: true
+      required:
+      - date
+      - employee
+    AttendanceStatusEnum:
+      enum:
+      - Present
+      - Absent
+      - Half Day
+      - Late
+      - Leave
+      type: string
+      description: |-
+        * `Present` - Present
+        * `Absent` - Absent
+        * `Half Day` - Half Day
+        * `Late` - Late
+        * `Leave` - Leave
+    Candidate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        job_title:
+          type: string
+          readOnly: true
+        first_name:
+          type: string
+          maxLength: 100
+        last_name:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 20
+        address:
+          type: string
+          nullable: true
+        resume:
+          type: string
+          format: uri
+          nullable: true
+        skills:
+          type: string
+        experience:
+          type: string
+          maxLength: 100
+        education:
+          type: string
+          maxLength: 150
+        source:
+          type: string
+          nullable: true
+          maxLength: 100
+        application_date:
+          type: string
+          format: date
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/CandidateStatusEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        job_opening:
+          type: integer
+      required:
+      - application_date
+      - created_at
+      - education
+      - email
+      - experience
+      - first_name
+      - id
+      - job_opening
+      - job_title
+      - last_name
+      - phone
+      - skills
+      - updated_at
+    CandidateRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        phone:
+          type: string
+          minLength: 1
+          maxLength: 20
+        address:
+          type: string
+          nullable: true
+        resume:
+          type: string
+          format: binary
+          nullable: true
+        skills:
+          type: string
+          minLength: 1
+        experience:
+          type: string
+          minLength: 1
+          maxLength: 100
+        education:
+          type: string
+          minLength: 1
+          maxLength: 150
+        source:
+          type: string
+          nullable: true
+          maxLength: 100
+        status:
+          $ref: '#/components/schemas/CandidateStatusEnum'
+        job_opening:
+          type: integer
+      required:
+      - education
+      - email
+      - experience
+      - first_name
+      - job_opening
+      - last_name
+      - phone
+      - skills
+    CandidateStatusEnum:
+      enum:
+      - Applied
+      - Shortlisted
+      - Interview Scheduled
+      - Selected
+      - Rejected
+      type: string
+      description: |-
+        * `Applied` - Applied
+        * `Shortlisted` - Shortlisted
+        * `Interview Scheduled` - Interview Scheduled
+        * `Selected` - Selected
+        * `Rejected` - Rejected
+    ChartsAnalyticsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+        data:
+          $ref: '#/components/schemas/ChartsAnalyticsResponseData'
+      required:
+      - data
+    ChartsAnalyticsResponseData:
+      type: object
+      properties:
+        growth:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        payout:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        candidates:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - candidates
+      - growth
+      - payout
+    DashboardAnalyticsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+        data:
+          $ref: '#/components/schemas/DashboardAnalyticsResponseData'
+      required:
+      - data
+    DashboardAnalyticsResponseData:
+      type: object
+      properties:
+        total_employees:
+          type: integer
+        present_today:
+          type: integer
+        pending_leaves:
+          type: integer
+        total_payroll:
+          type: number
+          format: double
+      required:
+      - pending_leaves
+      - present_today
+      - total_employees
+      - total_payroll
+    Department:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        employee_count:
+          type: integer
+          readOnly: true
+      required:
+      - created_at
+      - employee_count
+      - id
+      - name
+    DepartmentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+      required:
+      - name
+    Designation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        department:
+          type: integer
+        department_name:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          nullable: true
+      required:
+      - department
+      - department_name
+      - id
+      - name
+    DesignationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        department:
+          type: integer
+        description:
+          type: string
+          nullable: true
+      required:
+      - department
+      - name
+    Document:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 150
+        category:
+          type: integer
+        category_name:
+          type: string
+          readOnly: true
+        employee:
+          type: string
+          nullable: true
+        employee_name:
+          type: string
+          nullable: true
+          readOnly: true
+        uploaded_by:
+          type: integer
+          readOnly: true
+        uploaded_by_username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          readOnly: true
+        file:
+          type: string
+          format: uri
+        file_type:
+          type: string
+          readOnly: true
+          nullable: true
+        file_size:
+          type: integer
+          readOnly: true
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        version:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/DocumentStatusEnum'
+          readOnly: true
+        uploaded_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - category
+      - category_name
+      - employee_name
+      - file
+      - file_size
+      - file_type
+      - id
+      - status
+      - title
+      - updated_at
+      - uploaded_at
+      - uploaded_by
+      - uploaded_by_username
+      - version
+    DocumentAccessLog:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        document:
+          type: integer
+        document_title:
+          type: string
+          readOnly: true
+        user:
+          type: integer
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          readOnly: true
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        timestamp:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - action
+      - document
+      - document_title
+      - id
+      - timestamp
+      - user
+      - username
+    DocumentAnalyticsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+        data:
+          $ref: '#/components/schemas/DocumentAnalyticsResponseData'
+      required:
+      - data
+    DocumentAnalyticsResponseData:
+      type: object
+      properties:
+        total_documents:
+          type: integer
+        documents_by_category:
+          type: object
+          additionalProperties: {}
+        completion_rate:
+          type: number
+          format: double
+      required:
+      - completion_rate
+      - documents_by_category
+      - total_documents
+    DocumentCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        document_count:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - document_count
+      - id
+      - name
+    DocumentCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+      required:
+      - name
+    DocumentRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 150
+        category:
+          type: integer
+        employee:
+          type: string
+          minLength: 1
+          nullable: true
+        file:
+          type: string
+          format: binary
+        description:
+          type: string
+          nullable: true
+      required:
+      - category
+      - file
+      - title
+    DocumentStatusEnum:
+      enum:
+      - Active
+      - Archived
+      - Deleted
+      type: string
+      description: |-
+        * `Active` - Active
+        * `Archived` - Archived
+        * `Deleted` - Deleted
+    Employee:
+      type: object
+      properties:
+        employee_id:
+          type: string
+          maxLength: 20
+        user:
+          type: integer
+          nullable: true
+        user_username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          readOnly: true
+        first_name:
+          type: string
+          maxLength: 100
+        last_name:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          nullable: true
+          maxLength: 20
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        gender:
+          type: string
+          nullable: true
+          maxLength: 20
+        address:
+          type: string
+          nullable: true
+        joining_date:
+          type: string
+          format: date
+          nullable: true
+        department:
+          type: integer
+        department_name:
+          type: string
+          readOnly: true
+        designation:
+          type: integer
+        designation_name:
+          type: string
+          readOnly: true
+        profile_picture:
+          type: string
+          format: uri
+          nullable: true
+          maxLength: 300
+        salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        employment_status:
+          $ref: '#/components/schemas/EmploymentStatusEnum'
+        emergency_contact: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - department
+      - department_name
+      - designation
+      - designation_name
+      - email
+      - employee_id
+      - first_name
+      - last_name
+      - updated_at
+      - user_username
+    EmployeeAnalyticsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+        data:
+          $ref: '#/components/schemas/EmployeeAnalyticsResponseData'
+      required:
+      - data
+    EmployeeAnalyticsResponseData:
+      type: object
+      properties:
+        total_employees:
+          type: integer
+        active_employees:
+          type: integer
+        inactive_employees:
+          type: integer
+        new_hires:
+          type: integer
+        departments:
+          type: object
+          additionalProperties: {}
+        designations:
+          type: object
+          additionalProperties: {}
+        gender:
+          type: object
+          additionalProperties: {}
+      required:
+      - active_employees
+      - departments
+      - designations
+      - gender
+      - inactive_employees
+      - new_hires
+      - total_employees
+    EmployeeRequest:
+      type: object
+      properties:
+        employee_id:
+          type: string
+          minLength: 1
+          maxLength: 20
+        user:
+          type: integer
+          nullable: true
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        phone:
+          type: string
+          nullable: true
+          maxLength: 20
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        gender:
+          type: string
+          nullable: true
+          maxLength: 20
+        address:
+          type: string
+          nullable: true
+        joining_date:
+          type: string
+          format: date
+          nullable: true
+        department:
+          type: integer
+        designation:
+          type: integer
+        profile_picture:
+          type: string
+          format: uri
+          nullable: true
+          maxLength: 300
+        salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        employment_status:
+          $ref: '#/components/schemas/EmploymentStatusEnum'
+        emergency_contact: {}
+      required:
+      - department
+      - designation
+      - email
+      - employee_id
+      - first_name
+      - last_name
+    EmploymentStatusEnum:
+      enum:
+      - ACTIVE
+      - ON LEAVE
+      - REMOTE
+      - TERMINATED
+      type: string
+      description: |-
+        * `ACTIVE` - Active
+        * `ON LEAVE` - On Leave
+        * `REMOTE` - Remote
+        * `TERMINATED` - Terminated
+    Interview:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        candidate_name:
+          type: string
+          readOnly: true
+        job_title:
+          type: string
+          readOnly: true
+        interviewer_name:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          readOnly: true
+        interview_date:
+          type: string
+          format: date-time
+        interview_type:
+          $ref: '#/components/schemas/InterviewTypeEnum'
+        status:
+          $ref: '#/components/schemas/InterviewStatusEnum'
+        feedback:
+          type: string
+          nullable: true
+        rating:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        candidate:
+          type: integer
+        job_opening:
+          type: integer
+        interviewer:
+          type: integer
+      required:
+      - candidate
+      - candidate_name
+      - created_at
+      - id
+      - interview_date
+      - interviewer
+      - interviewer_name
+      - job_opening
+      - job_title
+    InterviewRequest:
+      type: object
+      properties:
+        interview_date:
+          type: string
+          format: date-time
+        interview_type:
+          $ref: '#/components/schemas/InterviewTypeEnum'
+        status:
+          $ref: '#/components/schemas/InterviewStatusEnum'
+        feedback:
+          type: string
+          nullable: true
+        rating:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+        candidate:
+          type: integer
+        job_opening:
+          type: integer
+        interviewer:
+          type: integer
+      required:
+      - candidate
+      - interview_date
+      - interviewer
+      - job_opening
+    InterviewStatusEnum:
+      enum:
+      - Scheduled
+      - Completed
+      - Cancelled
+      type: string
+      description: |-
+        * `Scheduled` - Scheduled
+        * `Completed` - Completed
+        * `Cancelled` - Cancelled
+    InterviewTypeEnum:
+      enum:
+      - Online
+      - Offline
+      - Phone
+      type: string
+      description: |-
+        * `Online` - Online
+        * `Offline` - Offline
+        * `Phone` - Phone
+    JobOpening:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        department_name:
+          type: string
+          readOnly: true
+        designation_name:
+          type: string
+          readOnly: true
+        candidate_count:
+          type: integer
+          readOnly: true
+        job_title:
+          type: string
+          maxLength: 150
+        description:
+          type: string
+        required_skills:
+          type: string
+        experience_required:
+          type: string
+          maxLength: 100
+        employment_type:
+          type: string
+          maxLength: 50
+        location:
+          type: string
+          maxLength: 100
+        salary_range:
+          type: string
+          maxLength: 100
+        vacancies:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        status:
+          $ref: '#/components/schemas/JobOpeningStatusEnum'
+        posted_date:
+          type: string
+          format: date
+          readOnly: true
+        closing_date:
+          type: string
+          format: date
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        department:
+          type: integer
+        designation:
+          type: integer
+      required:
+      - candidate_count
+      - created_at
+      - department
+      - department_name
+      - description
+      - designation
+      - designation_name
+      - employment_type
+      - experience_required
+      - id
+      - job_title
+      - location
+      - posted_date
+      - required_skills
+      - salary_range
+      - updated_at
+    JobOpeningRequest:
+      type: object
+      properties:
+        job_title:
+          type: string
+          minLength: 1
+          maxLength: 150
+        description:
+          type: string
+          minLength: 1
+        required_skills:
+          type: string
+          minLength: 1
+        experience_required:
+          type: string
+          minLength: 1
+          maxLength: 100
+        employment_type:
+          type: string
+          minLength: 1
+          maxLength: 50
+        location:
+          type: string
+          minLength: 1
+          maxLength: 100
+        salary_range:
+          type: string
+          minLength: 1
+          maxLength: 100
+        vacancies:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        status:
+          $ref: '#/components/schemas/JobOpeningStatusEnum'
+        closing_date:
+          type: string
+          format: date
+          nullable: true
+        department:
+          type: integer
+        designation:
+          type: integer
+      required:
+      - department
+      - description
+      - designation
+      - employment_type
+      - experience_required
+      - job_title
+      - location
+      - required_skills
+      - salary_range
+    JobOpeningStatusEnum:
+      enum:
+      - Open
+      - Closed
+      - On Hold
+      type: string
+      description: |-
+        * `Open` - Open
+        * `Closed` - Closed
+        * `On Hold` - On Hold
+    LeaveAnalyticsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+        data:
+          $ref: '#/components/schemas/LeaveAnalyticsResponseData'
+      required:
+      - data
+    LeaveAnalyticsResponseData:
+      type: object
+      properties:
+        total_requests:
+          type: integer
+        pending_requests:
+          type: integer
+        approved_requests:
+          type: integer
+        rejected_requests:
+          type: integer
+        monthly_trends:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        department_stats:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - approved_requests
+      - department_stats
+      - monthly_trends
+      - pending_requests
+      - rejected_requests
+      - total_requests
+    LeaveBalance:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        employee:
+          type: string
+        employee_name:
+          type: string
+          readOnly: true
+        employee_last_name:
+          type: string
+          readOnly: true
+        leave_type:
+          type: integer
+        leave_type_name:
+          type: string
+          readOnly: true
+        total_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        used_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        remaining_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        year:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          default: 2026
+      required:
+      - employee
+      - employee_last_name
+      - employee_name
+      - id
+      - leave_type
+      - leave_type_name
+    LeaveBalanceRequest:
+      type: object
+      properties:
+        employee:
+          type: string
+          minLength: 1
+        leave_type:
+          type: integer
+        total_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        used_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        remaining_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        year:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          default: 2026
+      required:
+      - employee
+      - leave_type
+    LeaveReportsResponse:
+      type: object
+      properties:
+        total_requests:
+          type: integer
+        approved_requests:
+          type: integer
+        pending_requests:
+          type: integer
+        rejected_requests:
+          type: integer
+        department_distribution:
+          type: object
+          additionalProperties: {}
+      required:
+      - approved_requests
+      - department_distribution
+      - pending_requests
+      - rejected_requests
+      - total_requests
+    LeaveRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        employee:
+          type: string
+        employee_name:
+          type: string
+          readOnly: true
+        employee_last_name:
+          type: string
+          readOnly: true
+        leave_type:
+          type: integer
+        leave_type_name:
+          type: string
+          readOnly: true
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        total_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          readOnly: true
+        reason:
+          type: string
+        status:
+          allOf:
+          - $ref: '#/components/schemas/LeaveStatusEnum'
+          readOnly: true
+        approved_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        approved_by_name:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          readOnly: true
+        approved_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        rejection_reason:
+          type: string
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - approved_at
+      - approved_by
+      - approved_by_name
+      - created_at
+      - employee
+      - employee_last_name
+      - employee_name
+      - end_date
+      - id
+      - leave_type
+      - leave_type_name
+      - reason
+      - rejection_reason
+      - start_date
+      - status
+      - total_days
+      - updated_at
+    LeaveRequestRequest:
+      type: object
+      properties:
+        employee:
+          type: string
+          minLength: 1
+        leave_type:
+          type: integer
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        reason:
+          type: string
+          minLength: 1
+      required:
+      - employee
+      - end_date
+      - leave_type
+      - reason
+      - start_date
+    LeaveStatusEnum:
+      enum:
+      - Pending
+      - Approved
+      - Rejected
+      - Cancelled
+      type: string
+      description: |-
+        * `Pending` - Pending
+        * `Approved` - Approved
+        * `Rejected` - Rejected
+        * `Cancelled` - Cancelled
+    LeaveType:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+        max_days_per_year:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        is_paid_leave:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+    LeaveTypeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+        max_days_per_year:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        is_paid_leave:
+          type: boolean
+      required:
+      - name
+    MeResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        role:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+      required:
+      - id
+      - name
+      - permissions
+      - role
+    OverviewAnalyticsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+        data:
+          $ref: '#/components/schemas/OverviewAnalyticsResponseData'
+      required:
+      - data
+    OverviewAnalyticsResponseData:
+      type: object
+      properties:
+        total_employees:
+          type: integer
+        present_today:
+          type: integer
+        pending_leaves:
+          type: integer
+        total_payroll:
+          type: number
+          format: double
+      required:
+      - pending_leaves
+      - present_today
+      - total_employees
+      - total_payroll
+    PaginatedDepartmentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Department'
+    PaginatedDesignationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Designation'
+    PaginatedEmployeeList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Employee'
+    PatchedAttendanceRequest:
+      type: object
+      properties:
+        employee:
+          type: string
+          minLength: 1
+        date:
+          type: string
+          format: date
+        clock_in:
+          type: string
+          format: date-time
+          nullable: true
+        clock_out:
+          type: string
+          format: date-time
+          nullable: true
+        attendance_status:
+          $ref: '#/components/schemas/AttendanceStatusEnum'
+        remarks:
+          type: string
+          nullable: true
+    PatchedCandidateRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        phone:
+          type: string
+          minLength: 1
+          maxLength: 20
+        address:
+          type: string
+          nullable: true
+        resume:
+          type: string
+          format: binary
+          nullable: true
+        skills:
+          type: string
+          minLength: 1
+        experience:
+          type: string
+          minLength: 1
+          maxLength: 100
+        education:
+          type: string
+          minLength: 1
+          maxLength: 150
+        source:
+          type: string
+          nullable: true
+          maxLength: 100
+        status:
+          $ref: '#/components/schemas/CandidateStatusEnum'
+        job_opening:
+          type: integer
+    PatchedDepartmentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+    PatchedDesignationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        department:
+          type: integer
+        description:
+          type: string
+          nullable: true
+    PatchedDocumentCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+    PatchedDocumentRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 150
+        category:
+          type: integer
+        employee:
+          type: string
+          minLength: 1
+          nullable: true
+        file:
+          type: string
+          format: binary
+        description:
+          type: string
+          nullable: true
+    PatchedEmployeeRequest:
+      type: object
+      properties:
+        employee_id:
+          type: string
+          minLength: 1
+          maxLength: 20
+        user:
+          type: integer
+          nullable: true
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        phone:
+          type: string
+          nullable: true
+          maxLength: 20
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        gender:
+          type: string
+          nullable: true
+          maxLength: 20
+        address:
+          type: string
+          nullable: true
+        joining_date:
+          type: string
+          format: date
+          nullable: true
+        department:
+          type: integer
+        designation:
+          type: integer
+        profile_picture:
+          type: string
+          format: uri
+          nullable: true
+          maxLength: 300
+        salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        employment_status:
+          $ref: '#/components/schemas/EmploymentStatusEnum'
+        emergency_contact: {}
+    PatchedInterviewRequest:
+      type: object
+      properties:
+        interview_date:
+          type: string
+          format: date-time
+        interview_type:
+          $ref: '#/components/schemas/InterviewTypeEnum'
+        status:
+          $ref: '#/components/schemas/InterviewStatusEnum'
+        feedback:
+          type: string
+          nullable: true
+        rating:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+        candidate:
+          type: integer
+        job_opening:
+          type: integer
+        interviewer:
+          type: integer
+    PatchedJobOpeningRequest:
+      type: object
+      properties:
+        job_title:
+          type: string
+          minLength: 1
+          maxLength: 150
+        description:
+          type: string
+          minLength: 1
+        required_skills:
+          type: string
+          minLength: 1
+        experience_required:
+          type: string
+          minLength: 1
+          maxLength: 100
+        employment_type:
+          type: string
+          minLength: 1
+          maxLength: 50
+        location:
+          type: string
+          minLength: 1
+          maxLength: 100
+        salary_range:
+          type: string
+          minLength: 1
+          maxLength: 100
+        vacancies:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        status:
+          $ref: '#/components/schemas/JobOpeningStatusEnum'
+        closing_date:
+          type: string
+          format: date
+          nullable: true
+        department:
+          type: integer
+        designation:
+          type: integer
+    PatchedLeaveBalanceRequest:
+      type: object
+      properties:
+        employee:
+          type: string
+          minLength: 1
+        leave_type:
+          type: integer
+        total_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        used_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        remaining_days:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        year:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          default: 2026
+    PatchedLeaveRequestRequest:
+      type: object
+      properties:
+        employee:
+          type: string
+          minLength: 1
+        leave_type:
+          type: integer
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        reason:
+          type: string
+          minLength: 1
+    PatchedLeaveTypeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+        max_days_per_year:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        is_paid_leave:
+          type: boolean
+    PatchedPayrollRequest:
+      type: object
+      properties:
+        payroll_month:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        payroll_year:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        gross_salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        total_allowances:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        overtime_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        tax_deduction:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        provident_fund:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        other_deductions:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        net_salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        status:
+          $ref: '#/components/schemas/PayrollStatusEnum'
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true
+        employee:
+          type: string
+          minLength: 1
+    PatchedPayslipRequest:
+      type: object
+      properties:
+        payroll:
+          type: integer
+        payslip_number:
+          type: string
+          minLength: 1
+          maxLength: 50
+        pdf_file:
+          type: string
+          nullable: true
+          maxLength: 300
+    PatchedRecruitmentStageRequest:
+      type: object
+      properties:
+        current_stage:
+          type: string
+          minLength: 1
+          maxLength: 50
+        remarks:
+          type: string
+          nullable: true
+        candidate:
+          type: integer
+        updated_by:
+          type: integer
+          nullable: true
+    PatchedSalaryStructureRequest:
+      type: object
+      properties:
+        basic_salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        house_allowance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        transport_allowance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        medical_allowance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        special_allowance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        bonus:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        overtime_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+        tax_percentage:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        provident_fund_percentage:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        employee:
+          type: string
+          minLength: 1
+    PatchedShiftRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        working_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
+        description:
+          type: string
+          nullable: true
+    Payroll:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        employee_name:
+          type: string
+          readOnly: true
+        employee_last_name:
+          type: string
+          readOnly: true
+        payroll_month:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        payroll_year:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        gross_salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        total_allowances:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        overtime_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        tax_deduction:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        provident_fund:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        other_deductions:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        net_salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        status:
+          $ref: '#/components/schemas/PayrollStatusEnum'
+        generated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true
+        employee:
+          type: string
+      required:
+      - employee
+      - employee_last_name
+      - employee_name
+      - generated_at
+      - id
+      - payroll_month
+      - payroll_year
+    PayrollAnalyticsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+        data:
+          $ref: '#/components/schemas/PayrollAnalyticsResponseData'
+      required:
+      - data
+    PayrollAnalyticsResponseData:
+      type: object
+      properties:
+        total_payroll_cost:
+          type: number
+          format: double
+        monthly_payroll_cost:
+          type: number
+          format: double
+        average_salary:
+          type: number
+          format: double
+        department_distribution:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        deductions_summary:
+          type: object
+          additionalProperties: {}
+      required:
+      - average_salary
+      - deductions_summary
+      - department_distribution
+      - monthly_payroll_cost
+      - total_payroll_cost
+    PayrollReportsResponse:
+      type: object
+      properties:
+        summary:
+          type: object
+          additionalProperties: {}
+        departments:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - departments
+      - summary
+    PayrollRequest:
+      type: object
+      properties:
+        payroll_month:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        payroll_year:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        gross_salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        total_allowances:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        overtime_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        tax_deduction:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        provident_fund:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        other_deductions:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        net_salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        status:
+          $ref: '#/components/schemas/PayrollStatusEnum'
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true
+        employee:
+          type: string
+          minLength: 1
+      required:
+      - employee
+      - payroll_month
+      - payroll_year
+    PayrollStatusEnum:
+      enum:
+      - Draft
+      - Processed
+      - Paid
+      type: string
+      description: |-
+        * `Draft` - Draft
+        * `Processed` - Processed
+        * `Paid` - Paid
+    Payslip:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        payroll:
+          type: integer
+        employee_name:
+          type: string
+          readOnly: true
+        employee_last_name:
+          type: string
+          readOnly: true
+        payroll_month:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          readOnly: true
+        payroll_year:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          readOnly: true
+        payslip_number:
+          type: string
+          maxLength: 50
+        pdf_file:
+          type: string
+          nullable: true
+          maxLength: 300
+        net_salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+        generated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - employee_last_name
+      - employee_name
+      - generated_at
+      - id
+      - net_salary
+      - payroll
+      - payroll_month
+      - payroll_year
+      - payslip_number
+    PayslipRequest:
+      type: object
+      properties:
+        payroll:
+          type: integer
+        payslip_number:
+          type: string
+          minLength: 1
+          maxLength: 50
+        pdf_file:
+          type: string
+          nullable: true
+          maxLength: 300
+      required:
+      - payroll
+      - payslip_number
+    ProcessPayrollRequestRequest:
+      type: object
+      properties:
+        month:
+          type: integer
+          description: Month (1-12)
+        year:
+          type: integer
+          description: Year (e.g. 2026)
+        employee_id:
+          type: string
+          minLength: 1
+          description: Specific Employee ID to process
+      required:
+      - month
+      - year
+    ProcessPayrollResponse:
+      type: object
+      properties:
+        success_count:
+          type: integer
+        failed_count:
+          type: integer
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payroll'
+        errors:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - errors
+      - failed_count
+      - records
+      - success_count
+    RecruitmentAnalyticsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+        data:
+          $ref: '#/components/schemas/RecruitmentAnalyticsResponseData'
+      required:
+      - data
+    RecruitmentAnalyticsResponseData:
+      type: object
+      properties:
+        total_openings:
+          type: integer
+        total_candidates:
+          type: integer
+        total_interviews:
+          type: integer
+        recruitment_stages:
+          type: object
+          additionalProperties: {}
+      required:
+      - recruitment_stages
+      - total_candidates
+      - total_interviews
+      - total_openings
+    RecruitmentModuleAnalyticsResponse:
+      type: object
+      properties:
+        open_vacancies:
+          type: integer
+        total_candidates:
+          type: integer
+        interviews_scheduled:
+          type: integer
+      required:
+      - interviews_scheduled
+      - open_vacancies
+      - total_candidates
+    RecruitmentModuleReportsResponse:
+      type: object
+      properties:
+        funnel:
+          type: object
+          additionalProperties: {}
+      required:
+      - funnel
+    RecruitmentStage:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        candidate_name:
+          type: string
+          readOnly: true
+        updated_by_name:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          readOnly: true
+        current_stage:
+          type: string
+          maxLength: 50
+        remarks:
+          type: string
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        candidate:
+          type: integer
+        updated_by:
+          type: integer
+          nullable: true
+      required:
+      - candidate
+      - candidate_name
+      - current_stage
+      - id
+      - updated_at
+      - updated_by_name
+    RecruitmentStageRequest:
+      type: object
+      properties:
+        current_stage:
+          type: string
+          minLength: 1
+          maxLength: 50
+        remarks:
+          type: string
+          nullable: true
+        candidate:
+          type: integer
+        updated_by:
+          type: integer
+          nullable: true
+      required:
+      - candidate
+      - current_stage
+    RejectLeaveRequestRequest:
+      type: object
+      properties:
+        request_id:
+          type: integer
+          description: LeaveRequest ID
+        rejection_reason:
+          type: string
+          minLength: 1
+      required:
+      - request_id
+    RestoreDocumentRequestRequest:
+      type: object
+      properties:
+        document_id:
+          type: integer
+      required:
+      - document_id
+    SalaryStructure:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        employee_name:
+          type: string
+          readOnly: true
+        employee_last_name:
+          type: string
+          readOnly: true
+        basic_salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        house_allowance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        transport_allowance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        medical_allowance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        special_allowance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        bonus:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        overtime_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+        tax_percentage:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        provident_fund_percentage:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        employee:
+          type: string
+      required:
+      - basic_salary
+      - created_at
+      - employee
+      - employee_last_name
+      - employee_name
+      - id
+      - updated_at
+    SalaryStructureRequest:
+      type: object
+      properties:
+        basic_salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        house_allowance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        transport_allowance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        medical_allowance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        special_allowance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        bonus:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        overtime_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+        tax_percentage:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        provident_fund_percentage:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        employee:
+          type: string
+          minLength: 1
+      required:
+      - basic_salary
+      - employee
+    ScheduleInterviewRequestRequest:
+      type: object
+      properties:
+        candidate_id:
+          type: integer
+        job_opening_id:
+          type: integer
+        interviewer_id:
+          type: integer
+          description: User ID of interviewer
+        interview_date:
+          type: string
+          minLength: 1
+          description: YYYY-MM-DD HH:MM
+        interview_type:
+          type: string
+          minLength: 1
+          default: Online
+      required:
+      - candidate_id
+      - interview_date
+      - interviewer_id
+      - job_opening_id
+    Shift:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        working_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
+        description:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - end_time
+      - id
+      - name
+      - start_time
+    ShiftRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        working_hours:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
+        description:
+          type: string
+          nullable: true
+      required:
+      - end_time
+      - name
+      - start_time
+    ShortlistCandidateRequestRequest:
+      type: object
+      properties:
+        candidate_id:
+          type: integer
+          description: Candidate ID
+      required:
+      - candidate_id
+    TokenObtainPair:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
+    TokenObtainPairRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+      required:
+      - access
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - refresh
+    UploadDocumentRequestRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        category:
+          type: integer
+          description: Category ID
+        employee:
+          type: string
+          minLength: 1
+          description: Employee ID (nullable)
+        description:
+          type: string
+          minLength: 1
+        file:
+          type: string
+          format: binary
+      required:
+      - category
+      - file
+      - title
+    UserProfileResponse:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        department:
+          type: string
+          nullable: true
+      required:
+      - department
+      - email
+      - phone
+      - role
+      - username
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

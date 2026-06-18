@@ -1,0 +1,11 @@
+export { default as Dashboard } from './Dashboard/Dashboard';
+export { default as Employees } from './Employees/Employees';
+export { default as Profile } from './Employees/Profile';
+export { default as Attendance } from './Attendance/Attendance';
+export { default as Leave } from './Leave/Leave';
+export { default as Payroll } from './Payroll/Payroll';
+export { default as Recruitment } from './Recruitment/Recruitment';
+export { default as Reports } from './Analytics/Reports';
+export { default as Documents } from './Documents/Documents';
+export { default as Settings } from './Settings/Settings';
+export { default as Auth } from './Auth/Auth';
