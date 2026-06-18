@@ -61,11 +61,13 @@ def get_attendance_analytics() -> dict:
     today_records = Attendance.objects.filter(date=today)
     present = today_records.filter(status=Attendance.Status.PRESENT).count()
     late = today_records.filter(status=Attendance.Status.LATE).count()
+    half_day = today_records.filter(status=Attendance.Status.HALF_DAY).count()
     absent = today_records.filter(status=Attendance.Status.ABSENT).count()
+    leave = today_records.filter(status=Attendance.Status.LEAVE).count()
     wfh = today_records.filter(status='WFH').count()  # optional status
 
     # Percentage
-    att_rate = ((present + wfh + late) / total_emp * 100) if total_emp > 0 else 0.0
+    att_rate = ((present + wfh + late + half_day) / total_emp * 100) if total_emp > 0 else 0.0
 
     # Monthly trends (last 30 days daily counts)
     thirty_days_ago = today - timezone.timedelta(days=30)
@@ -73,7 +75,7 @@ def get_attendance_analytics() -> dict:
         Attendance.objects.filter(date__gte=thirty_days_ago)
         .values('date')
         .annotate(
-            present_count=Count('id', filter=Q(status__in=['Present', 'Late', 'WFH'])),
+            present_count=Count('id', filter=Q(status__in=['Present', 'Late', 'Half Day', 'WFH'])),
             total_count=Count('id')
         )
         .order_by('date')
@@ -84,18 +86,68 @@ def get_attendance_analytics() -> dict:
         Attendance.objects.filter(date=today)
         .values('employee__department__name')
         .annotate(
-            present=Count('id', filter=Q(status__in=['Present', 'Late'])),
+            present=Count('id', filter=Q(status__in=['Present', 'Late', 'Half Day'])),
             total=Count('id')
         )
     )
 
+    # All records status percentage breakdown
+    all_records = Attendance.objects.filter(employee__is_deleted=False)
+    c_present = all_records.filter(status=Attendance.Status.PRESENT).count()
+    c_late = all_records.filter(status=Attendance.Status.LATE).count()
+    c_half = all_records.filter(status=Attendance.Status.HALF_DAY).count()
+    c_absent = all_records.filter(status=Attendance.Status.ABSENT).count()
+    c_leave = all_records.filter(status=Attendance.Status.LEAVE).count()
+    
+    total_rec = c_present + c_late + c_half + c_absent + c_leave
+    
+    breakdown = {
+        "present": 0,
+        "late": 0,
+        "half_day": 0,
+        "absent": 0,
+        "leave": 0
+    }
+    if total_rec > 0:
+        p_pres = round((c_present / total_rec) * 100)
+        p_late = round((c_late / total_rec) * 100)
+        p_half = round((c_half / total_rec) * 100)
+        p_abs = round((c_absent / total_rec) * 100)
+        p_lv = round((c_leave / total_rec) * 100)
+        
+        sum_p = p_pres + p_late + p_half + p_abs + p_lv
+        if sum_p != 100:
+            vals = [
+                ('present', p_pres),
+                ('late', p_late),
+                ('half_day', p_half),
+                ('absent', p_abs),
+                ('leave', p_lv)
+            ]
+            vals.sort(key=lambda x: x[1], reverse=True)
+            adjusted_name = vals[0][0]
+            if adjusted_name == 'present': p_pres += (100 - sum_p)
+            elif adjusted_name == 'late': p_late += (100 - sum_p)
+            elif adjusted_name == 'half_day': p_half += (100 - sum_p)
+            elif adjusted_name == 'absent': p_abs += (100 - sum_p)
+            elif adjusted_name == 'leave': p_lv += (100 - sum_p)
+            
+        breakdown["present"] = p_pres
+        breakdown["late"] = p_late
+        breakdown["half_day"] = p_half
+        breakdown["absent"] = p_abs
+        breakdown["leave"] = p_lv
+
     return {
-        "present_today": present + wfh,
+        "present_today": present + wfh + late + half_day,
         "absent_today": absent,
         "late_today": late,
+        "half_day_today": half_day,
+        "leave_today": leave,
         "attendance_percentage": round(att_rate, 2),
         "monthly_trends": trends,
-        "department_attendance": dept_att
+        "department_attendance": dept_att,
+        "breakdown": breakdown
     }
 
 def get_leave_analytics() -> dict:

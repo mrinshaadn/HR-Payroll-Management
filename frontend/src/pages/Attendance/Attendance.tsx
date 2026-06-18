@@ -246,20 +246,57 @@ export default function Attendance() {
 
   // Pie chart calculation based on history data
   const shiftDistribution = React.useMemo(() => {
-    const counts = { Present: 0, Late: 0, WFH: 0, Absent: 0 };
+    const counts = { Present: 0, Late: 0, 'Half Day': 0, Absent: 0, Leave: 0 };
     historyRecords.forEach(r => {
-      if (r.status in counts) {
-        counts[r.status as keyof typeof counts]++;
-      }
+      const s = r.status;
+      if (s === 'Present' || s === 'WFH') counts.Present++;
+      else if (s === 'Late') counts.Late++;
+      else if (s === 'Half Day') counts['Half Day']++;
+      else if (s === 'Absent') counts.Absent++;
+      else if (s === 'Leave') counts.Leave++;
     });
 
-    const total = historyRecords.length || 1;
+    const total = (counts.Present + counts.Late + counts['Half Day'] + counts.Absent + counts.Leave) || 0;
+    
+    let presentVal = 0;
+    let lateVal = 0;
+    let halfDayVal = 0;
+    let absentVal = 0;
+    let leaveVal = 0;
+
+    if (total > 0) {
+      presentVal = Math.round((counts.Present / total) * 100);
+      lateVal = Math.round((counts.Late / total) * 100);
+      halfDayVal = Math.round((counts['Half Day'] / total) * 100);
+      absentVal = Math.round((counts.Absent / total) * 100);
+      leaveVal = Math.round((counts.Leave / total) * 100);
+
+      const sum = presentVal + lateVal + halfDayVal + absentVal + leaveVal;
+      if (sum !== 100) {
+        const vals = [
+          { name: 'Present', val: presentVal },
+          { name: 'Late', val: lateVal },
+          { name: 'Half Day', val: halfDayVal },
+          { name: 'Absent', val: absentVal },
+          { name: 'Leave', val: leaveVal }
+        ];
+        vals.sort((a, b) => b.val - a.val);
+        const adjustedName = vals[0].name;
+        if (adjustedName === 'Present') presentVal += (100 - sum);
+        else if (adjustedName === 'Late') lateVal += (100 - sum);
+        else if (adjustedName === 'Half Day') halfDayVal += (100 - sum);
+        else if (adjustedName === 'Absent') absentVal += (100 - sum);
+        else if (adjustedName === 'Leave') leaveVal += (100 - sum);
+      }
+    }
+
     return [
-      { name: 'Present', value: Math.round((counts.Present / total) * 100), color: '#10b981' },
-      { name: 'Late', value: Math.round((counts.Late / total) * 100), color: '#f59e0b' },
-      { name: 'WFH', value: Math.round((counts.WFH / total) * 100), color: '#3b82f6' },
-      { name: 'Absent', value: Math.round((counts.Absent / total) * 100), color: '#ef4444' }
-    ].filter(s => s.value > 0);
+      { name: 'Present', value: presentVal, color: '#10b981' },
+      { name: 'Late', value: lateVal, color: '#f59e0b' },
+      { name: 'Half Day', value: halfDayVal, color: '#f97316' },
+      { name: 'Absent', value: absentVal, color: '#ef4444' },
+      { name: 'Leave', value: leaveVal, color: '#3b82f6' }
+    ];
   }, [historyRecords]);
 
   // Recharts trend data - group last 7 check-ins
@@ -557,8 +594,8 @@ export default function Attendance() {
               <div className="flex items-center justify-between">
                 <div className="h-28 w-28">
                   <PieChart width={112} height={112}>
-                    <Pie data={shiftDistribution} innerRadius={22} outerRadius={34} dataKey="value">
-                      {shiftDistribution.map((e, index) => (
+                    <Pie data={shiftDistribution.filter(s => s.value > 0)} innerRadius={22} outerRadius={34} dataKey="value">
+                      {shiftDistribution.filter(s => s.value > 0).map((e, index) => (
                         <Cell key={`cell-${index}`} fill={e.color} />
                       ))}
                     </Pie>

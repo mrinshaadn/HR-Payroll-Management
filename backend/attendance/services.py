@@ -114,8 +114,48 @@ def get_monthly_summary(employee_id: str, year: int, month: int):
             else:
                 counts['Absent'] += 1
                 
+    status_keys = ['Present', 'Late', 'Half Day', 'Absent', 'Leave']
+    total_days = sum(counts[k] for k in status_keys)
+    
+    breakdown = {
+        "present": 0,
+        "late": 0,
+        "half_day": 0,
+        "absent": 0,
+        "leave": 0
+    }
+    if total_days > 0:
+        p_pres = round((counts['Present'] / total_days) * 100)
+        p_late = round((counts['Late'] / total_days) * 100)
+        p_half = round((counts['Half Day'] / total_days) * 100)
+        p_abs = round((counts['Absent'] / total_days) * 100)
+        p_lv = round((counts['Leave'] / total_days) * 100)
+        
+        sum_p = p_pres + p_late + p_half + p_abs + p_lv
+        if sum_p != 100:
+            vals = [
+                ('present', p_pres),
+                ('late', p_late),
+                ('half_day', p_half),
+                ('absent', p_abs),
+                ('leave', p_lv)
+            ]
+            vals.sort(key=lambda x: x[1], reverse=True)
+            adjusted_name = vals[0][0]
+            if adjusted_name == 'present': p_pres += (100 - sum_p)
+            elif adjusted_name == 'late': p_late += (100 - sum_p)
+            elif adjusted_name == 'half_day': p_half += (100 - sum_p)
+            elif adjusted_name == 'absent': p_abs += (100 - sum_p)
+            elif adjusted_name == 'leave': p_lv += (100 - sum_p)
+            
+        breakdown["present"] = p_pres
+        breakdown["late"] = p_late
+        breakdown["half_day"] = p_half
+        breakdown["absent"] = p_abs
+        breakdown["leave"] = p_lv
+
     counts['total_hours_worked'] = round(total_hours, 2)
     counts['total_overtime'] = round(total_overtime, 2)
-    counts['total_days'] = sum(counts.values())
-    
+    counts['total_days'] = total_days
+    counts['breakdown'] = breakdown
     return counts
