@@ -447,54 +447,54 @@ export default function Attendance() {
         </h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Present */}
-          <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-850 dark:bg-slate-900">
+          <div className="flex items-center justify-between rounded-xl border-l-4 border-emerald-500 bg-white p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 dark:border-slate-800 dark:bg-slate-850">
             <div>
-              <span className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">Present</span>
-              <span className="text-2xl font-black text-emerald-600 mt-1 block">
+              <span className="text-xs font-extrabold text-slate-500 dark:text-white uppercase tracking-wider block">Present</span>
+              <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1 block">
                 {summaryCounts.Present + summaryCounts.WFH}
               </span>
             </div>
-            <div className="rounded-lg bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
-              <CheckCircle2 className="h-4 w-4" />
+            <div className="rounded-lg bg-emerald-100 p-2.5 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+              <CheckCircle2 className="h-4.5 w-4.5" />
             </div>
           </div>
 
           {/* Absent */}
-          <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-850 dark:bg-slate-900">
+          <div className="flex items-center justify-between rounded-xl border-l-4 border-rose-500 bg-white p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 dark:border-slate-800 dark:bg-slate-850">
             <div>
-              <span className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">Absent</span>
-              <span className="text-2xl font-black text-rose-600 mt-1 block">
+              <span className="text-xs font-extrabold text-slate-500 dark:text-white uppercase tracking-wider block">Absent</span>
+              <span className="text-3xl font-black text-rose-600 dark:text-rose-400 mt-1 block">
                 {summaryCounts.Absent}
               </span>
             </div>
-            <div className="rounded-lg bg-rose-50 p-2 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
-              <UserX className="h-4 w-4" />
+            <div className="rounded-lg bg-rose-100 p-2.5 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
+              <UserX className="h-4.5 w-4.5" />
             </div>
           </div>
 
           {/* Late */}
-          <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-850 dark:bg-slate-900">
+          <div className="flex items-center justify-between rounded-xl border-l-4 border-amber-500 bg-white p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 dark:border-slate-800 dark:bg-slate-850">
             <div>
-              <span className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">Late</span>
-              <span className="text-2xl font-black text-amber-600 mt-1 block">
+              <span className="text-xs font-extrabold text-slate-500 dark:text-white uppercase tracking-wider block">Late</span>
+              <span className="text-3xl font-black text-amber-600 dark:text-amber-400 mt-1 block">
                 {summaryCounts.Late}
               </span>
             </div>
-            <div className="rounded-lg bg-amber-50 p-2 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
-              <Clock className="h-4 w-4" />
+            <div className="rounded-lg bg-amber-100 p-2.5 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+              <Clock className="h-4.5 w-4.5" />
             </div>
           </div>
 
           {/* On Leave */}
-          <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-850 dark:bg-slate-900">
+          <div className="flex items-center justify-between rounded-xl border-l-4 border-blue-500 bg-white p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 dark:border-slate-800 dark:bg-slate-850">
             <div>
-              <span className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">On Leave</span>
-              <span className="text-2xl font-black text-blue-600 mt-1 block">
+              <span className="text-xs font-extrabold text-slate-500 dark:text-white uppercase tracking-wider block">On Leave</span>
+              <span className="text-3xl font-black text-blue-600 dark:text-blue-400 mt-1 block">
                 {summaryCounts.Leave}
               </span>
             </div>
-            <div className="rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
-              <Calendar className="h-4 w-4" />
+            <div className="rounded-lg bg-blue-100 p-2.5 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+              <Calendar className="h-4.5 w-4.5" />
             </div>
           </div>
         </div>
@@ -648,7 +648,7 @@ export default function Attendance() {
               {/* HR: Filter by specific Employee */}
               {isHR ? (
                 <div>
-                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-450 mb-1">Employee</label>
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300 mb-1">Employee</label>
                   <select
                     value={selectedEmployeeId}
                     onChange={(e) => setSelectedEmployeeId(e.target.value)}
@@ -662,7 +662,7 @@ export default function Attendance() {
                 </div>
               ) : (
                 <div>
-                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-450 mb-1">Employee Name</label>
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300 mb-1">Employee Name</label>
                   <input
                     type="text"
                     readOnly
@@ -675,7 +675,7 @@ export default function Attendance() {
               {/* HR: Filter by Department */}
               {isHR && (
                 <div>
-                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-450 mb-1">Department</label>
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300 mb-1">Department</label>
                   <select
                     value={selectedDepartmentId}
                     onChange={(e) => setSelectedDepartmentId(e.target.value)}
@@ -691,7 +691,7 @@ export default function Attendance() {
 
               {/* Status Filter */}
               <div>
-                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-450 mb-1">Status</label>
+                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300 mb-1">Status</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
@@ -707,7 +707,7 @@ export default function Attendance() {
 
               {/* Start Date */}
               <div>
-                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-450 mb-1">Start Date</label>
+                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300 mb-1">Start Date</label>
                 <input
                   type="date"
                   value={startDate}
@@ -718,7 +718,7 @@ export default function Attendance() {
 
               {/* End Date */}
               <div>
-                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-450 mb-1">End Date</label>
+                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300 mb-1">End Date</label>
                 <input
                   type="date"
                   value={endDate}
@@ -843,7 +843,7 @@ export default function Attendance() {
             {/* LEDGER PAGINATION CONTROL */}
             {historyRecords.length > pageSize && (
               <div className="flex items-center justify-between border-t border-slate-100 bg-white px-6 py-3 dark:border-slate-800/80 dark:bg-slate-850">
-                <span className="text-[10px] font-bold text-slate-450 uppercase">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase">
                   Showing {startIndex + 1} - {Math.min(startIndex + pageSize, historyRecords.length)} of {historyRecords.length} records
                 </span>
                 
