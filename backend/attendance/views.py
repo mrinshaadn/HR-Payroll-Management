@@ -78,18 +78,31 @@ def clock_in(request):
             status=status.HTTP_400_BAD_REQUEST
         )
         
-    local_now = timezone.localtime(timezone.now())
-    check_in_time = local_now.time()
+    from leave_management.models import LeaveRequest
     
-    nine_am = datetime.strptime("09:00:00", "%H:%M:%S").time()
-    ten_am = datetime.strptime("10:00:00", "%H:%M:%S").time()
+    # Check if approved leave exists for today
+    on_leave = LeaveRequest.objects.filter(
+        employee=employee,
+        status='APPROVED',
+        start_date__lte=today,
+        end_date__gte=today
+    ).exists()
     
-    if check_in_time < nine_am:
-        status_choice = Attendance.Status.PRESENT
-    elif check_in_time <= ten_am:
-        status_choice = Attendance.Status.LATE
+    if on_leave:
+        status_choice = Attendance.Status.LEAVE
     else:
-        status_choice = Attendance.Status.HALF_DAY
+        local_now = timezone.localtime(timezone.now())
+        check_in_time = local_now.time()
+        
+        nine_am = datetime.strptime("09:00:00", "%H:%M:%S").time()
+        ten_am = datetime.strptime("10:00:00", "%H:%M:%S").time()
+        
+        if check_in_time < nine_am:
+            status_choice = Attendance.Status.PRESENT
+        elif check_in_time < ten_am:
+            status_choice = Attendance.Status.LATE
+        else:
+            status_choice = Attendance.Status.HALF_DAY
         
     if attendance:
         attendance.check_in = timezone.now()

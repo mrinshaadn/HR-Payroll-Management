@@ -85,7 +85,8 @@ export default function Dashboard() {
     clockOut,
     documents,
     attendanceRecords,
-    todayRecord
+    todayRecord,
+    refreshData
   } = useHR();
   const navigate = useNavigate();
 
@@ -107,6 +108,18 @@ export default function Dashboard() {
       loadAnalytics();
     }
   }, [user]);
+
+  // Auto-refresh attendance status and analytics every 10 seconds
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      refreshData();
+      if (user && user.role !== 'EMPLOYEE') {
+        analyticsService.getDashboardAnalytics().then(ov => { if (ov) setOverview(ov); }).catch(console.error);
+        analyticsService.getEmployeeAnalytics().then(stats => { if (stats) setEmployeeStats(stats); }).catch(console.error);
+      }
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [refreshData, user]);
 
   const colors = ['#004ac6', '#2563eb', '#38bdf8', '#f59e0b', '#8b5cf6'];
   const dynDepartmentData = employeeStats?.by_department?.length > 0
