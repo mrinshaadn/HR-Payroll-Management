@@ -7,7 +7,13 @@ from accounts.permissions import IsAdminOrHR, IsOwnerOrHR
 class LeaveTypeViewSet(viewsets.ModelViewSet):
     queryset = LeaveType.objects.all().order_by('name')
     serializer_class = LeaveTypeSerializer
-    permission_classes = [IsAuthenticated, IsAdminOrHR]
+
+    def get_permissions(self):
+        # All authenticated users can list/retrieve leave types (needed for Apply Leave dropdown)
+        # Only Admin/HR can create, update, or delete leave types
+        if self.action in ['list', 'retrieve']:
+            return [IsAuthenticated()]
+        return [IsAuthenticated(), IsAdminOrHR()]
 
 class LeaveBalanceViewSet(viewsets.ModelViewSet):
     queryset = LeaveBalance.objects.all().order_by('-year', 'employee__first_name')

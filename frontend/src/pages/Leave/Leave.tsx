@@ -157,12 +157,12 @@ export default function Leave() {
     const personalRequests = leaveRequests.filter(req => isHR || req.employeeName === user?.name);
 
     personalRequests.forEach(req => {
-      if (req.status === 'REJECTED' || req.status === 'CANCELLED' || req.status === 'Cancelled') return;
+      if (req.status === 'REJECTED' || req.status === 'CANCELLED') return;
       
-      const parts = req.dates.split(' - ');
-      if (parts[0] && parts[1]) {
-        const reqStart = new Date(parts[0]);
-        const reqEnd = new Date(parts[1]);
+      // Use raw ISO dates for reliable parsing
+      if (req.startDate && req.endDate) {
+        const reqStart = new Date(req.startDate + 'T00:00:00');
+        const reqEnd = new Date(req.endDate + 'T00:00:00');
 
         // Overlap Condition: (StartA <= EndB) and (EndA >= StartB)
         if (start <= reqEnd && end >= reqStart) {
@@ -459,25 +459,22 @@ export default function Leave() {
 
     // Map leaveRequests onto calendar grid days
     dayGrid.forEach(gridDay => {
-      const dVal = gridDay.date;
+      const dVal = new Date(gridDay.date.getTime());
       dVal.setHours(0,0,0,0);
 
       leaveRequests.forEach(req => {
-        // Skip Rejected or Cancelled leaves
-        if (req.status === 'REJECTED' || req.status === 'CANCELLED' || req.status === 'Cancelled') return;
+        // Skip Cancelled leaves only; show Approved, Pending, and Rejected
+        if (req.status === 'CANCELLED') return;
 
-        const parts = req.dates.split(' - ');
-        if (parts[0] && parts[1]) {
-          const reqStart = new Date(parts[0]);
-          reqStart.setHours(0,0,0,0);
-          const reqEnd = new Date(parts[1]);
-          reqEnd.setHours(0,0,0,0);
+        // Use raw ISO dates for reliable parsing
+        if (req.startDate && req.endDate) {
+          const reqStart = new Date(req.startDate + 'T00:00:00');
+          const reqEnd = new Date(req.endDate + 'T00:00:00');
 
           if (dVal >= reqStart && dVal <= reqEnd) {
             // Check filters
             let matched = true;
             if (calEmpFilter !== 'All') {
-              // Find matching employee by name
               const empRecord = employees.find(e => e.id === calEmpFilter);
               if (empRecord && req.employeeName !== empRecord.name) {
                 matched = false;
@@ -908,10 +905,12 @@ export default function Leave() {
                     {cell.leaves.map((lv, lidx) => (
                       <div 
                         key={lidx} 
-                        title={`${lv.employeeName} (${lv.leaveType}): ${lv.reason}`}
+                        title={`${lv.employeeName} (${lv.leaveType}): ${lv.reason} [${lv.status}]`}
                         className={`text-[8px] px-1 py-0.5 rounded font-black truncate max-w-full ${
                           lv.status === 'APPROVED' 
                             ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-l border-emerald-500' 
+                            : lv.status === 'REJECTED'
+                            ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-l border-rose-500'
                             : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-l border-amber-500'
                         }`}
                       >
@@ -924,8 +923,9 @@ export default function Leave() {
             </div>
 
             <div className="mt-4 flex items-center justify-between text-[9px] font-bold text-slate-400 pt-3 border-t border-slate-50 dark:border-slate-800">
-              <span className="flex items-center"><span className="h-2 w-2 rounded bg-emerald-500 mr-1" /> Approved Leaves</span>
-              <span className="flex items-center"><span className="h-2 w-2 rounded bg-amber-500 mr-1" /> Pending Leaves</span>
+              <span className="flex items-center"><span className="h-2 w-2 rounded bg-emerald-500 mr-1" /> Approved</span>
+              <span className="flex items-center"><span className="h-2 w-2 rounded bg-amber-500 mr-1" /> Pending</span>
+              <span className="flex items-center"><span className="h-2 w-2 rounded bg-rose-500 mr-1" /> Rejected</span>
             </div>
           </div>
         </div>

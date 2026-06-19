@@ -36,9 +36,23 @@ def validate_leave_balance(employee_id: str, leave_type_id: int, total_days: flo
             leave_type_id=leave_type_id,
             year=year
         )
-        return float(balance.remaining_days) >= float(total_days)
     except LeaveBalance.DoesNotExist:
-        return False
+        from employees.models import Employee
+        from .models import LeaveType
+        try:
+            employee = Employee.objects.get(employee_id=employee_id)
+            leave_type = LeaveType.objects.get(id=leave_type_id)
+            balance = LeaveBalance.objects.create(
+                employee=employee,
+                leave_type=leave_type,
+                year=year,
+                total_days=leave_type.max_days_per_year,
+                used_days=0.0,
+                remaining_days=leave_type.max_days_per_year
+            )
+        except (Employee.DoesNotExist, LeaveType.DoesNotExist):
+            return False
+    return float(balance.remaining_days) >= float(total_days)
 
 def deduct_leave_balance(employee_id: str, leave_type_id: int, total_days: float, year: int) -> bool:
     """
@@ -50,12 +64,27 @@ def deduct_leave_balance(employee_id: str, leave_type_id: int, total_days: float
             leave_type_id=leave_type_id,
             year=year
         )
-        balance.used_days = float(balance.used_days) + float(total_days)
-        balance.remaining_days = float(balance.total_days) - float(balance.used_days)
-        balance.save()
-        return True
     except LeaveBalance.DoesNotExist:
-        return False
+        from employees.models import Employee
+        from .models import LeaveType
+        try:
+            employee = Employee.objects.get(employee_id=employee_id)
+            leave_type = LeaveType.objects.get(id=leave_type_id)
+            balance = LeaveBalance.objects.create(
+                employee=employee,
+                leave_type=leave_type,
+                year=year,
+                total_days=leave_type.max_days_per_year,
+                used_days=0.0,
+                remaining_days=leave_type.max_days_per_year
+            )
+        except (Employee.DoesNotExist, LeaveType.DoesNotExist):
+            return False
+            
+    balance.used_days = float(balance.used_days) + float(total_days)
+    balance.remaining_days = float(balance.total_days) - float(balance.used_days)
+    balance.save()
+    return True
 
 def generate_leave_reports(year: int):
     """

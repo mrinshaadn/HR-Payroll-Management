@@ -20,7 +20,11 @@ class SalaryStructure(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Structure for {self.employee.name}"
+        return f"Structure for {self.employee.first_name} {self.employee.last_name}"
+
+    class Meta:
+        unique_together = ('employee',)  # One salary structure per employee
+
 
 class Payroll(models.Model):
     class Status(models.TextChoices):

@@ -125,6 +125,57 @@ export const HRProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     setNotifications([]);
   };
 
+  // Keep track of notified requests to prevent duplication
+  const [notifiedKeys, setNotifiedKeys] = useState<string[]>(() => {
+    const cached = localStorage.getItem('hr_notified_keys');
+    return cached ? JSON.parse(cached) : [];
+  });
+
+  useEffect(() => {
+    if (!leaveRequests || !leaveRequests.length || !user) return;
+    
+    const isHR = user.role === 'HR' || user.role === 'ADMIN';
+    const newNotifications: Array<{ id: string; text: string; time: string; read: boolean; type: string }> = [];
+    let keysUpdated = false;
+    const tempNotifiedKeys = [...notifiedKeys];
+
+    leaveRequests.forEach(req => {
+      const key = `${req.id}-${req.status}`;
+      if (tempNotifiedKeys.includes(key)) return;
+
+      if (isHR && req.status.toUpperCase() === 'PENDING') {
+        newNotifications.push({
+          id: `notif-${key}`,
+          text: `${req.employeeName} submitted a ${req.leaveType} request. Reason: ${req.reason}`,
+          time: 'Just now',
+          read: false,
+          type: 'info'
+        });
+        tempNotifiedKeys.push(key);
+        keysUpdated = true;
+      } else if (!isHR && req.employeeName.toLowerCase() === user.name.toLowerCase()) {
+        const upperStatus = req.status.toUpperCase();
+        if (upperStatus === 'APPROVED' || upperStatus === 'REJECTED') {
+          newNotifications.push({
+            id: `notif-${key}`,
+            text: `Your ${req.leaveType} request has been ${req.status.toLowerCase()}.`,
+            time: 'Just now',
+            read: false,
+            type: upperStatus === 'APPROVED' ? 'success' : 'warning'
+          });
+          tempNotifiedKeys.push(key);
+          keysUpdated = true;
+        }
+      }
+    });
+
+    if (keysUpdated) {
+      setNotifiedKeys(tempNotifiedKeys);
+      localStorage.setItem('hr_notified_keys', JSON.stringify(tempNotifiedKeys));
+      setNotifications(prev => [...newNotifications, ...prev]);
+    }
+  }, [leaveRequests, user]);
+
   const [leaveBalances, setLeaveBalances] = useState<Array<{ id: number; leave_type_name: string; allocated_days: number; remaining_days: number }>>([]);
 
   const refreshData = async () => {

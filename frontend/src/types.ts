@@ -52,7 +52,9 @@ export interface LeaveRequest {
   reason: string;
   dates: string;
   duration: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'Pending' | 'Approved' | 'Rejected' | 'Cancelled';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+  startDate?: string;  // raw ISO date e.g. "2026-06-18"
+  endDate?: string;    // raw ISO date e.g. "2026-06-20"
 }
 
 export interface AttendanceRecord {

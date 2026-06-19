@@ -4,8 +4,8 @@ import { LeaveRequest } from '../types';
 export const mapBackendLeaveToFrontend = (data: any): LeaveRequest => {
   const formatDateRange = (start: string, end: string) => {
     try {
-      const sDate = new Date(start);
-      const eDate = new Date(end);
+      const sDate = new Date(start + 'T00:00:00');
+      const eDate = new Date(end + 'T00:00:00');
       const options: Intl.DateTimeFormatOptions = { month: 'short', day: '2-digit', year: 'numeric' };
       return `${sDate.toLocaleDateString('en-US', options)} - ${eDate.toLocaleDateString('en-US', options)}`;
     } catch {
@@ -21,7 +21,9 @@ export const mapBackendLeaveToFrontend = (data: any): LeaveRequest => {
     reason: data.reason || '',
     dates: formatDateRange(data.start_date, data.end_date),
     duration: `${data.total_days || 1} Days`,
-    status: data.status as LeaveRequest['status'],
+    status: (data.status || 'Pending').toUpperCase() as LeaveRequest['status'],
+    startDate: data.start_date,
+    endDate: data.end_date,
   };
 };
 

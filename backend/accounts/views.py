@@ -65,13 +65,15 @@ def me_view(request):
         perms = ["view_profile", "clock_in", "clock_out", "apply_leave", "view_payslip"]
         
     avatar = user.avatar
+    name = user.username
     if hasattr(user, 'employee_profile') and user.employee_profile:
         emp = user.employee_profile
         avatar = request.build_absolute_uri(emp.profile_image.url) if emp.profile_image else emp.profile_picture
+        name = emp.name
 
     return Response({
         "id": user.id,
-        "name": user.username,
+        "name": name,
         "role": role,
         "permissions": perms,
         "avatar": avatar
