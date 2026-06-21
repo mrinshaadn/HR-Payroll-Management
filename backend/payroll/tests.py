@@ -28,12 +28,12 @@ class PayrollModuleTests(APITestCase):
         self.emp1 = Employee.objects.create(
             employee_id="EMP001", user=self.emp_user1, first_name="Emp", last_name="One",
             email="emp1@t.com", department=self.dept, designation=self.desig,
-            employment_status="ACTIVE"
+            employment_status="ACTIVE", assigned_hr=self.hr
         )
         self.emp2 = Employee.objects.create(
             employee_id="EMP002", user=self.emp_user2, first_name="Emp", last_name="Two",
             email="emp2@t.com", department=self.dept, designation=self.desig,
-            employment_status="ACTIVE"
+            employment_status="ACTIVE", assigned_hr=self.hr
         )
 
         # Salary Structure

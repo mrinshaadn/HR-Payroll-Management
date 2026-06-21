@@ -87,6 +87,12 @@ def process_payroll_api(request):
                 {"detail": f"Employee with ID '{employee_id}' not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
+        if request.user.role == 'HR' and not request.user.is_superuser:
+            if employee.assigned_hr != request.user:
+                return Response(
+                    {"detail": "Permission denied. You can only process payroll for your assigned employees."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
         try:
             payroll = calculate_and_save_payroll(employee, year, month, override=bool(override))
             processed_records.append(PayrollSerializer(payroll).data)
@@ -96,7 +102,10 @@ def process_payroll_api(request):
             errors.append({"employee_id": employee_id, "name": employee.name, "detail": f"Unexpected error: {str(e)}"})
     else:
         # Process all active employees
-        employees = Employee.objects.filter(is_active=True, is_deleted=False)
+        if request.user.role == 'HR' and not request.user.is_superuser:
+            employees = Employee.objects.filter(is_active=True, is_deleted=False, assigned_hr=request.user)
+        else:
+            employees = Employee.objects.filter(is_active=True, is_deleted=False)
         if not employees.exists():
             return Response(
                 {"detail": "No active employees found to process payroll for."},
@@ -153,7 +162,10 @@ def payroll_reports_api(request):
     except (ValueError, TypeError):
         year = timezone.now().year
 
-    query = Payroll.objects.filter(payroll_year=year)
+    if request.user.role == 'HR' and not request.user.is_superuser:
+        query = Payroll.objects.filter(payroll_year=year, employee__assigned_hr=request.user)
+    else:
+        query = Payroll.objects.filter(payroll_year=year)
     if month:
         try:
             query = query.filter(payroll_month=int(month))
@@ -208,13 +220,22 @@ def payroll_dashboard_api(request):
     current_month = now.month
 
     # Overall totals
-    all_payrolls = Payroll.objects.all()
-    current_month_payrolls = Payroll.objects.filter(
-        payroll_year=current_year,
-        payroll_month=current_month
-    )
+    if request.user.role == 'HR' and not request.user.is_superuser:
+        all_payrolls = Payroll.objects.filter(employee__assigned_hr=request.user)
+        current_month_payrolls = Payroll.objects.filter(
+            payroll_year=current_year,
+            payroll_month=current_month,
+            employee__assigned_hr=request.user
+        )
+        total_employees = Employee.objects.filter(is_active=True, is_deleted=False, assigned_hr=request.user).count()
+    else:
+        all_payrolls = Payroll.objects.all()
+        current_month_payrolls = Payroll.objects.filter(
+            payroll_year=current_year,
+            payroll_month=current_month
+        )
+        total_employees = Employee.objects.filter(is_active=True, is_deleted=False).count()
 
-    total_employees = Employee.objects.filter(is_active=True, is_deleted=False).count()
     processed_count = current_month_payrolls.filter(status__in=['Processed', 'Paid']).count()
     pending_count = total_employees - processed_count
     if pending_count < 0:
@@ -228,10 +249,13 @@ def payroll_dashboard_api(request):
     # Monthly trend for the current year (last 6 months)
     monthly_trend = []
     for m in range(max(1, current_month - 5), current_month + 1):
-        month_data = Payroll.objects.filter(
+        month_q = Payroll.objects.filter(
             payroll_year=current_year,
             payroll_month=m
-        ).aggregate(
+        )
+        if request.user.role == 'HR' and not request.user.is_superuser:
+            month_q = month_q.filter(employee__assigned_hr=request.user)
+        month_data = month_q.aggregate(
             total=Sum('net_salary'),
             count=Count('id')
         )
@@ -270,7 +294,7 @@ def monthly_summary_api(request):
     user = request.user
     query = Payroll.objects.all().order_by('-payroll_year', '-payroll_month')
 
-    if not (user.is_superuser or user.role in ['ADMIN', 'HR', 'MANAGER']):
+    if not (user.is_superuser or user.role in ['ADMIN', 'HR']):
         try:
             query = query.filter(employee=user.employee_profile)
         except Exception:

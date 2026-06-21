@@ -32,7 +32,8 @@ export default function Profile() {
     updateEmployee, 
     restoreEmployee, 
     uploadEmployeePhoto, 
-    addNotification 
+    addNotification,
+    user
   } = useHR();
 
   const targetId = id || 'EMP-8829';
@@ -375,6 +376,10 @@ export default function Profile() {
                   <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{employee.department}</p>
                 </div>
                 <div>
+                  <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Assigned HR Representative</span>
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{employee.assigned_hr_name || 'Unassigned'}</p>
+                </div>
+                <div>
                   <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Immediate reporting manager</span>
                   <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{employee.manager}</p>
                 </div>
@@ -411,6 +416,32 @@ export default function Profile() {
                   <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Active Full-Time Specialist</p>
                 </div>
               </div>
+              
+              {user?.role === 'ADMIN' && employee.assigned_hr && (
+                <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-slate-200 mb-3">
+                    Assigned HR Information
+                  </h4>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">HR Name</span>
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{employee.assigned_hr_name || 'Unassigned'}</p>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">HR ID</span>
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">HR-{employee.assigned_hr}</p>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Department</span>
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{employee.assigned_hr_department || 'Human Resources'}</p>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Email</span>
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{employee.assigned_hr_email || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

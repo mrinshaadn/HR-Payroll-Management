@@ -143,19 +143,39 @@ export const HRProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       const key = `${req.id}-${req.status}`;
       if (tempNotifiedKeys.includes(key)) return;
 
-      if (isHR && req.status.toUpperCase() === 'PENDING') {
-        newNotifications.push({
-          id: `notif-${key}`,
-          text: `${req.employeeName} submitted a ${req.leaveType} request. Reason: ${req.reason}`,
-          time: 'Just now',
-          read: false,
-          type: 'info'
-        });
-        tempNotifiedKeys.push(key);
-        keysUpdated = true;
-      } else if (!isHR && req.employeeName.toLowerCase() === user.name.toLowerCase()) {
-        const upperStatus = req.status.toUpperCase();
-        if (upperStatus === 'APPROVED' || upperStatus === 'REJECTED') {
+      const upperStatus = req.status.toUpperCase();
+      const applicantRole = req.employeeRole || 'EMPLOYEE';
+      const isApplicantMe = req.employeeName.toLowerCase() === user.name.toLowerCase();
+
+      // 1. Pending Notifications
+      if (upperStatus === 'PENDING') {
+        if (!isApplicantMe) {
+          if (applicantRole === 'HR' && user.role === 'ADMIN') {
+            newNotifications.push({
+              id: `notif-${key}`,
+              text: `HR User ${req.employeeName} applied for ${req.leaveType}. Reason: ${req.reason}`,
+              time: 'Just now',
+              read: false,
+              type: 'info'
+            });
+            tempNotifiedKeys.push(key);
+            keysUpdated = true;
+          } else if (applicantRole === 'EMPLOYEE' && (user.role === 'ADMIN' || user.role === 'HR')) {
+            newNotifications.push({
+              id: `notif-${key}`,
+              text: `Employee ${req.employeeName} applied for ${req.leaveType}. Reason: ${req.reason}`,
+              time: 'Just now',
+              read: false,
+              type: 'info'
+            });
+            tempNotifiedKeys.push(key);
+            keysUpdated = true;
+          }
+        }
+      } 
+      // 2. Approved / Rejected Notifications
+      else if (upperStatus === 'APPROVED' || upperStatus === 'REJECTED') {
+        if (isApplicantMe) {
           newNotifications.push({
             id: `notif-${key}`,
             text: `Your ${req.leaveType} request has been ${req.status.toLowerCase()}.`,
@@ -235,8 +255,12 @@ export const HRProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   }, []);
 
   useEffect(() => {
-    // Always apply dark theme class for consistent enterprise UI theme
-    document.documentElement.classList.add('dark');
+    // Dynamic theme support for enterprise UI
+    if (settings.themeMode === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   }, [settings.themeMode]);
 
   // Actions

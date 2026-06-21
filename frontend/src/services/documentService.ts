@@ -5,7 +5,7 @@ export const mapBackendDocumentToFrontend = (data: any): DocumentRecord => {
   const formatDate = (isoString: string) => {
     try {
       const date = new Date(isoString);
-      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     } catch {
       return isoString || '';
     }
@@ -13,20 +13,30 @@ export const mapBackendDocumentToFrontend = (data: any): DocumentRecord => {
 
   const getStatus = (status: string): DocumentRecord['status'] => {
     if (status === 'Active') return 'Active';
-    if (status === 'Archived') return 'Expired'; // maps to Expired/Archived status in UI
+    if (status === 'Archived') return 'Expired';
     if (status === 'Deleted') return 'Missing';
+    if (status === 'Pending Verification') return 'Pending Verification';
+    if (status === 'Approved') return 'Approved';
+    if (status === 'Rejected') return 'Rejected';
     return 'Active';
   };
 
   return {
     id: String(data.id),
     name: data.title || 'Document File',
-    category: data.category_name || 'Contracts',
-    ownerName: data.employee_name || data.uploaded_by_username || 'Alex Rivera',
+    category: data.category_name || 'Other Documents',
+    category_id: data.category,
+    ownerName: data.employee_name || data.uploaded_by_username || 'Employee',
     ownerAvatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
     uploadDate: formatDate(data.uploaded_at),
-    expiryDate: 'Dec 2026', // Fallback
+    expiryDate: 'N/A',
     status: getStatus(data.status),
+    rawStatus: data.status,
+    fileSize: data.file_size,
+    fileType: data.file_type,
+    description: data.description,
+    fileUrl: data.file,
+    employeeId: data.employee,
   };
 };
 
@@ -132,5 +142,45 @@ export const documentService = {
   getDocumentLogs: async (): Promise<any[]> => {
     const response = await api.get('/documents/logs/');
     return response.data;
+  },
+
+  approveDocument: async (documentId: string): Promise<DocumentRecord | null> => {
+    const response = await api.post(`/documents/${documentId}/approve/`);
+    return mapBackendDocumentToFrontend(response.data);
+  },
+
+  rejectDocument: async (documentId: string): Promise<DocumentRecord | null> => {
+    const response = await api.post(`/documents/${documentId}/reject/`);
+    return mapBackendDocumentToFrontend(response.data);
+  },
+
+  replaceDocument: async (
+    documentId: string,
+    file: File,
+    title: string,
+    categoryId: number,
+    description?: string,
+    onProgress?: (percent: number) => void
+  ): Promise<DocumentRecord | null> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', title);
+    formData.append('category', String(categoryId));
+    if (description) {
+      formData.append('description', description);
+    }
+
+    const response = await api.put(`/documents/${documentId}/`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress: (progressEvent) => {
+        if (onProgress && progressEvent.total) {
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress(percent);
+        }
+      }
+    });
+    return mapBackendDocumentToFrontend(response.data);
   }
 };

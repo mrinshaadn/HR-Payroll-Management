@@ -207,7 +207,7 @@ export default function Settings() {
           <SettingsIcon className="h-6 w-6 text-blue-600 animate-spin" style={{ animationDuration: '6s' }} />
           <span>System Configurations &amp; Settings</span>
         </h1>
-        <p className="text-xs font-semibold text-slate-400 dark:text-slate-500">
+        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
           Fine tune system parameters, personal dashboard layout, and verify security protocols
         </p>
       </div>
@@ -233,10 +233,10 @@ export default function Settings() {
                   setSuccessMsg('');
                   setActiveTab(item.id as any);
                 }}
-                className={`flex w-full items-center space-x-2.5 rounded-lg px-4 py-2.5 text-xs font-bold tracking-wide transition ${
+                className={`flex w-full items-center space-x-2.5 rounded-lg px-4 py-2.5 text-xs font-bold tracking-wide transition border ${
                   activeTab === item.id
-                    ? 'bg-blue-600 text-white font-extrabold shadow-sm'
-                    : 'bg-white hover:bg-slate-100 text-slate-650 dark:bg-slate-900 dark:text-slate-350 dark:hover:bg-slate-800'
+                    ? 'bg-blue-600 text-white font-extrabold shadow-sm border-blue-600'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:border-slate-800'
                 }`}
               >
                 <item.icon className="h-4 w-4" />
@@ -247,19 +247,19 @@ export default function Settings() {
 
           {/* Quick Account Info card */}
           {firstName && (
-            <div className="rounded-xl border border-slate-150 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 text-xs space-y-2 mt-4">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">Settings Session Profile</span>
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 text-xs space-y-2 mt-4">
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Settings Session Profile</span>
               <div className="flex items-center space-x-2.5">
-                <div className="h-7 w-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs uppercase dark:bg-blue-900/60 dark:text-blue-300">
+                <div className="h-7 w-7 rounded-full bg-blue-100 text-blue-650 flex items-center justify-center font-bold text-xs uppercase dark:bg-blue-900/60 dark:text-blue-300">
                   {firstName[0]}
                 </div>
                 <div>
-                  <p className="font-extrabold text-slate-805 dark:text-white truncate">{firstName} {lastName}</p>
-                  <p className="text-[9px] text-slate-400 font-semibold uppercase">{user?.role}</p>
+                  <p className="font-extrabold text-slate-900 dark:text-white truncate">{firstName} {lastName}</p>
+                  <p className="text-[9px] text-slate-505 dark:text-slate-400 font-semibold uppercase">{user?.role}</p>
                 </div>
               </div>
-              <div className="pt-2 border-t border-slate-50 dark:border-slate-800 space-y-1 text-[10px] font-semibold text-slate-400">
-                <p>Status: <span className="text-emerald-500 font-bold">{accountStatus}</span></p>
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                <p>Status: <span className="text-emerald-600 dark:text-emerald-450 font-bold">{accountStatus}</span></p>
                 {lastLogin && <p>Last Login: <span className="font-mono">{lastLogin}</span></p>}
               </div>
             </div>
@@ -270,17 +270,17 @@ export default function Settings() {
         <div className="lg:col-span-3">
           
           {loading ? (
-            <div className="flex h-64 items-center justify-center bg-white rounded-xl border border-slate-100 dark:bg-slate-900 dark:border-slate-800">
+            <div className="flex h-64 items-center justify-center bg-white rounded-xl border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
               <div className="flex items-center space-x-2 text-slate-400 text-xs">
                 <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                <span className="font-bold uppercase tracking-wider">Syncing dashboard parameters...</span>
+                <span className="font-extrabold uppercase tracking-wider text-slate-550 dark:text-slate-400">Syncing dashboard parameters...</span>
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSave} className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-6">
+            <form onSubmit={handleSave} className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-6">
               
               {errorMsg && (
-                <div className="rounded-lg bg-rose-50 border border-rose-250 p-4 text-xs font-bold text-rose-700 dark:bg-rose-950/20 dark:border-rose-900">
+                <div className="rounded-lg bg-rose-50 border border-rose-200 p-4 text-xs font-bold text-rose-800 dark:bg-rose-950/20 dark:border-rose-900/60 dark:text-rose-300">
                   <div className="flex items-center space-x-2">
                     <AlertTriangle className="h-4 w-4" />
                     <span>{errorMsg}</span>
@@ -289,7 +289,7 @@ export default function Settings() {
               )}
 
               {successMsg && (
-                <div className="rounded-lg bg-emerald-50 border border-emerald-250 p-4 text-xs font-bold text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-900">
+                <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-4 text-xs font-bold text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-900/60 dark:text-emerald-300">
                   <div className="flex items-center space-x-2">
                     <CheckCircle className="h-4 w-4" />
                     <span>{successMsg}</span>
@@ -300,9 +300,9 @@ export default function Settings() {
               {/* TAB 1: MY PROFILE */}
               {activeTab === 'Profile' && (
                 <div className="space-y-6">
-                  <div className="border-b border-slate-100 pb-3 dark:border-slate-800">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">Personal Vault Profile</h3>
-                    <p className="text-[10px] text-slate-405">Review your personal coordinates and configure avatar profiles</p>
+                  <div className="border-b border-slate-200 pb-3 dark:border-slate-800">
+                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-slate-200">Personal Vault Profile</h3>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Review your personal coordinates and configure avatar profiles</p>
                   </div>
 
                   <div className="flex items-center space-x-4">
@@ -326,62 +326,62 @@ export default function Settings() {
                         value={avatar}
                         onChange={(e) => setAvatar(e.target.value)}
                         placeholder="https://images.unsplash.com/photo-..."
-                        className="mt-1.5 h-8 w-80 rounded-md border border-slate-250 bg-slate-50 px-2 text-[10px] text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-none"
+                        className="mt-1.5 h-8 w-80 rounded-md border border-slate-300 bg-slate-50 px-2 text-[10px] text-slate-800 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                       />
                     </div>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-450">First Name</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-550 dark:text-slate-400">First Name</label>
                       <input
                         required
                         type="text"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        className="mt-1 h-10 w-full rounded-md border border-slate-250 bg-slate-50 px-3 text-xs text-slate-850 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600"
+                        className="mt-1 h-10 w-full rounded-md border border-slate-300 bg-slate-50 px-3 text-xs text-slate-850 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-455">Last Name</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-550 dark:text-slate-400">Last Name</label>
                       <input
                         required
                         type="text"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        className="mt-1 h-10 w-full rounded-md border border-slate-250 bg-slate-50 px-3 text-xs text-slate-850 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600"
+                        className="mt-1 h-10 w-full rounded-md border border-slate-300 bg-slate-50 px-3 text-xs text-slate-850 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-455">Personal Email</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-550 dark:text-slate-400">Personal Email</label>
                       <input
                         required
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="mt-1 h-10 w-full rounded-md border border-slate-250 bg-slate-50 px-3 text-xs text-slate-850 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600"
+                        className="mt-1 h-10 w-full rounded-md border border-slate-300 bg-slate-50 px-3 text-xs text-slate-850 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-455">Phone Number</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-550 dark:text-slate-400">Phone Number</label>
                       <input
                         type="tel"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        className="mt-1 h-10 w-full rounded-md border border-slate-250 bg-slate-50 px-3 text-xs text-slate-850 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600"
+                        className="mt-1 h-10 w-full rounded-md border border-slate-300 bg-slate-50 px-3 text-xs text-slate-850 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                       />
                     </div>
 
                     <div className="sm:col-span-2">
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-455">Residential Address</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-555 dark:text-slate-400">Residential Address</label>
                       <textarea
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
                         rows={2}
-                        className="mt-1 w-full rounded-md border border-slate-250 bg-slate-50 p-2.5 text-xs text-slate-850 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600 resize-none"
+                        className="mt-1 w-full rounded-md border border-slate-300 bg-slate-50 p-2.5 text-xs text-slate-850 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900 resize-none"
                       />
                     </div>
                   </div>
@@ -391,35 +391,35 @@ export default function Settings() {
               {/* TAB 2: USER PREFERENCES */}
               {activeTab === 'Preferences' && (
                 <div className="space-y-6">
-                  <div className="border-b border-slate-100 pb-3 dark:border-slate-800">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">Horizon Preferences Panel</h3>
-                    <p className="text-[10px] text-slate-405">Configure visual themes, locale parameters and personal layouts</p>
+                  <div className="border-b border-slate-200 pb-3 dark:border-slate-800">
+                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-slate-200">Horizon Preferences Panel</h3>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Configure visual themes, locale parameters and personal layouts</p>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-450">Application Theme Mode</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-550 dark:text-slate-400">Application Theme Mode</label>
                       <select
                         value={theme}
                         onChange={(e) => setTheme(e.target.value)}
-                        className="mt-1 h-10 w-full rounded-md border border-slate-250 bg-slate-50 px-2 text-xs text-slate-850 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-305 focus:outline-none"
+                        className="mt-1 h-10 w-full rounded-md border border-slate-300 bg-slate-50 px-2 text-xs text-slate-855 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                       >
-                        <option value="light">Horizon Premium Light</option>
-                        <option value="dark">Horizon Premium Dark</option>
+                        <option value="light" className="dark:bg-slate-900">Horizon Premium Light</option>
+                        <option value="dark" className="dark:bg-slate-900">Horizon Premium Dark</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-450">Default System Language</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-555 dark:text-slate-400">Default System Language</label>
                       <select
                         value={language}
                         onChange={(e) => setLanguage(e.target.value)}
-                        className="mt-1 h-10 w-full rounded-md border border-slate-250 bg-slate-50 px-2 text-xs text-slate-850 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-305 focus:outline-none"
+                        className="mt-1 h-10 w-full rounded-md border border-slate-300 bg-slate-50 px-2 text-xs text-slate-855 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                       >
-                        <option value="en">English (United States)</option>
-                        <option value="es">Spanish (Español)</option>
-                        <option value="fr">French (Français)</option>
-                        <option value="de">German (Deutsch)</option>
+                        <option value="en" className="dark:bg-slate-900">English (United States)</option>
+                        <option value="es" className="dark:bg-slate-900">Spanish (Español)</option>
+                        <option value="fr" className="dark:bg-slate-900">French (Français)</option>
+                        <option value="de" className="dark:bg-slate-900">German (Deutsch)</option>
                       </select>
                     </div>
                   </div>
@@ -429,9 +429,9 @@ export default function Settings() {
               {/* TAB 3: SYSTEM ALERTS & LOG LEVEL */}
               {activeTab === 'Notifications' && (
                 <div className="space-y-6">
-                  <div className="border-b border-slate-100 pb-3 dark:border-slate-800">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">Alert Webhook Configurations</h3>
-                    <p className="text-[10px] text-slate-405">Toggle hooks for emails, attendance milestones, leave requests and payouts</p>
+                  <div className="border-b border-slate-200 pb-3 dark:border-slate-800">
+                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-slate-200">Alert Webhook Configurations</h3>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Toggle hooks for emails, attendance milestones, leave requests and payouts</p>
                   </div>
                   
                   <div className="space-y-3.5 text-xs font-semibold">
@@ -440,7 +440,7 @@ export default function Settings() {
                         type="checkbox" 
                         checked={emailNotif}
                         onChange={(e) => setEmailNotif(e.target.checked)}
-                        className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 h-4.5 w-4.5" 
+                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4.5 w-4.5 dark:bg-slate-800 dark:border-slate-700" 
                       />
                       <span className="text-slate-700 dark:text-slate-300">Enable general email notifications</span>
                     </label>
@@ -450,7 +450,7 @@ export default function Settings() {
                         type="checkbox" 
                         checked={attendanceNotif}
                         onChange={(e) => setAttendanceNotif(e.target.checked)}
-                        className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 h-4.5 w-4.5" 
+                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4.5 w-4.5 dark:bg-slate-800 dark:border-slate-700" 
                       />
                       <span className="text-slate-700 dark:text-slate-300">Notify supervisor on daily attendance/late clock events</span>
                     </label>
@@ -460,7 +460,7 @@ export default function Settings() {
                         type="checkbox" 
                         checked={leaveNotif}
                         onChange={(e) => setLeaveNotif(e.target.checked)}
-                        className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 h-4.5 w-4.5" 
+                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4.5 w-4.5 dark:bg-slate-800 dark:border-slate-700" 
                       />
                       <span className="text-slate-700 dark:text-slate-300">Alert employee on leave request approvals / rejection events</span>
                     </label>
@@ -470,7 +470,7 @@ export default function Settings() {
                         type="checkbox" 
                         checked={payrollNotif}
                         onChange={(e) => setPayrollNotif(e.target.checked)}
-                        className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 h-4.5 w-4.5" 
+                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4.5 w-4.5 dark:bg-slate-800 dark:border-slate-700" 
                       />
                       <span className="text-slate-700 dark:text-slate-300">Notify on monthly paycheck generation and payslip disbursals</span>
                     </label>
@@ -480,7 +480,7 @@ export default function Settings() {
                         type="checkbox" 
                         checked={recruitmentNotif}
                         onChange={(e) => setRecruitmentNotif(e.target.checked)}
-                        className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 h-4.5 w-4.5" 
+                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4.5 w-4.5 dark:bg-slate-800 dark:border-slate-700" 
                       />
                       <span className="text-slate-700 dark:text-slate-300">Alert on new recruitment applicant funnels &amp; interviews</span>
                     </label>
@@ -491,26 +491,26 @@ export default function Settings() {
               {/* TAB 4: PASSWORD MANAGEMENT SECURITY */}
               {activeTab === 'Security' && (
                 <div className="space-y-6">
-                  <div className="border-b border-slate-100 pb-3 dark:border-slate-800">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">Security &amp; Passwords</h3>
-                    <p className="text-[10px] text-slate-405">Update account login password securely</p>
+                  <div className="border-b border-slate-200 pb-3 dark:border-slate-800">
+                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-slate-200">Security &amp; Passwords</h3>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Update account login password securely</p>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-3">
                     <div className="relative">
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-450">Current Password</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-550 dark:text-slate-400">Current Password</label>
                       <div className="relative">
                         <input
                           required
                           type={showCurrent ? 'text' : 'password'}
                           value={currentPassword}
                           onChange={(e) => setCurrentPassword(e.target.value)}
-                          className="mt-1 h-10 w-full rounded-md border border-slate-250 bg-slate-50 pl-3 pr-10 text-xs text-slate-850 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none"
+                          className="mt-1 h-10 w-full rounded-md border border-slate-300 bg-slate-50 pl-3 pr-10 text-xs text-slate-855 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                         />
                         <button
                           type="button"
                           onClick={() => setShowCurrent(!showCurrent)}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-550 dark:text-slate-400"
                         >
                           {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
@@ -518,19 +518,19 @@ export default function Settings() {
                     </div>
 
                     <div className="relative">
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-455">New Password</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-555 dark:text-slate-400">New Password</label>
                       <div className="relative">
                         <input
                           required
                           type={showNew ? 'text' : 'password'}
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
-                          className="mt-1 h-10 w-full rounded-md border border-slate-250 bg-slate-50 pl-3 pr-10 text-xs text-slate-850 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none"
+                          className="mt-1 h-10 w-full rounded-md border border-slate-300 bg-slate-50 pl-3 pr-10 text-xs text-slate-855 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                         />
                         <button
                           type="button"
                           onClick={() => setShowNew(!showNew)}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-550 dark:text-slate-400"
                         >
                           {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
@@ -538,13 +538,13 @@ export default function Settings() {
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-455">Confirm New Password</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-555 dark:text-slate-400">Confirm New Password</label>
                       <input
                         required
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="mt-1 h-10 w-full rounded-md border border-slate-250 bg-slate-50 px-3 text-xs text-slate-850 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none"
+                        className="mt-1 h-10 w-full rounded-md border border-slate-300 bg-slate-50 px-3 text-xs text-slate-855 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                       />
                     </div>
                   </div>
@@ -554,58 +554,58 @@ export default function Settings() {
               {/* TAB 5: ORGANIZATIONAL DETAILS (HR ONLY) */}
               {activeTab === 'Org' && isHR && (
                 <div className="space-y-6">
-                  <div className="border-b border-slate-100 pb-3 dark:border-slate-800">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200">Horizon Corporate setups</h3>
-                    <p className="text-[10px] text-slate-405">Manage company details, timezone and payroll disbursal presets</p>
+                  <div className="border-b border-slate-200 pb-3 dark:border-slate-800">
+                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-slate-200">Horizon Corporate setups</h3>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Manage company details, timezone and payroll disbursal presets</p>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-450">Company Name</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-550 dark:text-slate-400">Company Name</label>
                       <input
                         required
                         type="text"
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
-                        className="mt-1 h-10 w-full rounded-md border border-slate-255 bg-slate-50 px-3 text-xs text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none"
+                        className="mt-1 h-10 w-full rounded-md border border-slate-300 bg-slate-50 px-3 text-xs text-slate-855 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-450">General Admin Contact Email</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-555 dark:text-slate-400">General Admin Contact Email</label>
                       <input
                         required
                         type="email"
                         value={adminEmail}
                         onChange={(e) => setAdminEmail(e.target.value)}
-                        className="mt-1 h-10 w-full rounded-md border border-slate-255 bg-slate-50 px-3 text-xs text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none"
+                        className="mt-1 h-10 w-full rounded-md border border-slate-300 bg-slate-50 px-3 text-xs text-slate-855 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-450">Active Payroll Disbursals Cycle</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-555 dark:text-slate-400">Active Payroll Disbursals Cycle</label>
                       <select
                         value={payCycle}
                         onChange={(e) => setPayCycle(e.target.value)}
-                        className="mt-1 h-10 w-full rounded-md border border-slate-255 bg-slate-50 px-2 text-xs text-slate-850 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-305 focus:outline-none"
+                        className="mt-1 h-10 w-full rounded-md border border-slate-300 bg-slate-50 px-2 text-xs text-slate-855 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                       >
-                        <option value="Bi-weekly">Bi-weekly Period (Every 14 Days)</option>
-                        <option value="Semi-monthly">Semi-monthly Period (15th and 30th)</option>
-                        <option value="Monthly">Monthly Period (Last slot monthly)</option>
+                        <option value="Bi-weekly" className="dark:bg-slate-900">Bi-weekly Period (Every 14 Days)</option>
+                        <option value="Semi-monthly" className="dark:bg-slate-900">Semi-monthly Period (15th and 30th)</option>
+                        <option value="Monthly" className="dark:bg-slate-900">Monthly Period (Last slot monthly)</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-450">Operating Timezone Selector</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-555 dark:text-slate-400">Operating Timezone Selector</label>
                       <select
                         value={timezone}
                         onChange={(e) => setTimezone(e.target.value)}
-                        className="mt-1 h-10 w-full rounded-md border border-slate-255 bg-slate-50 px-2 text-xs text-slate-850 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-305 focus:outline-none"
+                        className="mt-1 h-10 w-full rounded-md border border-slate-300 bg-slate-50 px-2 text-xs text-slate-855 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                       >
-                        <option value="EST - Eastern Standard Time">EST - Eastern Standard Time (NYC)</option>
-                        <option value="PST - Pacific Standard Time">PST - Pacific Standard Time (SF)</option>
-                        <option value="BST - British Summer Time">BST - British Summer Time (London)</option>
-                        <option value="IST - Indian Standard Time">IST - Indian Standard Time (Delhi)</option>
+                        <option value="EST - Eastern Standard Time" className="dark:bg-slate-900">EST - Eastern Standard Time (NYC)</option>
+                        <option value="PST - Pacific Standard Time" className="dark:bg-slate-900">PST - Pacific Standard Time (SF)</option>
+                        <option value="BST - British Summer Time" className="dark:bg-slate-900">BST - British Summer Time (London)</option>
+                        <option value="IST - Indian Standard Time" className="dark:bg-slate-900">IST - Indian Standard Time (Delhi)</option>
                       </select>
                     </div>
                   </div>
@@ -613,12 +613,12 @@ export default function Settings() {
               )}
 
               {/* Footer Form Submission control panel */}
-              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={loadAllSettings}
                   disabled={saveLoading}
-                  className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-705 hover:bg-slate-50 dark:border-slate-750 dark:text-slate-300 dark:hover:bg-slate-800 disabled:opacity-50 transition"
+                  className="rounded-lg border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 disabled:opacity-50 transition"
                 >
                   Discard Changes
                 </button>

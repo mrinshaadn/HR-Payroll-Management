@@ -42,6 +42,10 @@ export interface Employee {
   termination_date?: string | null;
   termination_reason?: string | null;
   termination_notes?: string | null;
+  assigned_hr?: number;
+  assigned_hr_name?: string;
+  assigned_hr_email?: string;
+  assigned_hr_department?: string;
 }
 
 export interface LeaveRequest {
@@ -55,6 +59,7 @@ export interface LeaveRequest {
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
   startDate?: string;  // raw ISO date e.g. "2026-06-18"
   endDate?: string;    // raw ISO date e.g. "2026-06-20"
+  employeeRole?: string;
 }
 
 export interface AttendanceRecord {
@@ -68,6 +73,9 @@ export interface AttendanceRecord {
   workHours: string;
   overtime: string;
   status: 'Present' | 'Late' | 'WFH' | 'Absent' | 'Half Day' | 'Leave';
+  employeeRole?: string;
+  employeeDepartment?: string;
+  employeeAssignedHR?: string;
 }
 
 export interface LoanRecord {
@@ -94,20 +102,37 @@ export interface RecruitmentCandidate {
   tags: string[];
   experience: string;
   score: string;
-  stage: 'Applied' | 'Screening' | 'Interviews' | 'Final Stage' | 'Offer';
+  stage: 'Applied' | 'Screening' | 'Shortlisted' | 'Interview Scheduled' | 'Interview Completed' | 'Selected' | 'Rejected';
   status?: string;
   appliedDate?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  skills?: string;
+  education?: string;
+  source?: string;
+  job_opening?: number;
+  resume?: string;
 }
 
 export interface DocumentRecord {
   id: string;
   name: string;
-  category: 'Offer Letters' | 'Contracts' | 'ID Proofs' | 'Certifications' | 'Tax Forms' | 'All Document';
+  category: string;
+  category_id?: number;
   ownerName: string;
   ownerAvatar: string;
   uploadDate: string;
   expiryDate: string;
-  status: 'Active' | 'Expiring Soon' | 'Expired' | 'Missing';
+  status: 'Active' | 'Expiring Soon' | 'Expired' | 'Missing' | 'Pending Verification' | 'Approved' | 'Rejected';
+  rawStatus?: string;
+  fileSize?: number;
+  fileType?: string;
+  description?: string;
+  fileUrl?: string;
+  employeeId?: string;
 }
 
 export interface GoalRecord {

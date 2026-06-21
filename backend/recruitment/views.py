@@ -90,6 +90,7 @@ def shortlist_candidate_api(request):
             'interviewer_id': serializers.IntegerField(help_text="User ID of interviewer"),
             'interview_date': serializers.CharField(help_text="YYYY-MM-DD HH:MM"),
             'interview_type': serializers.CharField(default="Online"),
+            'interview_round': serializers.CharField(default="HR Screening"),
         }
     ),
     responses={201: InterviewSerializer},
@@ -108,6 +109,7 @@ def schedule_interview_api(request):
     interviewer_id = request.data.get('interviewer_id')
     interview_date = request.data.get('interview_date')
     interview_type = request.data.get('interview_type', 'Online')
+    interview_round = request.data.get('interview_round', 'HR Screening')
 
     if not (candidate_id and job_opening_id and interviewer_id and interview_date):
         return Response(
@@ -130,7 +132,8 @@ def schedule_interview_api(request):
             interviewer=interviewer,
             interview_date=interview_date,
             interview_type=interview_type,
-            user=request.user
+            user=request.user,
+            interview_round=interview_round
         )
         serializer = InterviewSerializer(interview)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

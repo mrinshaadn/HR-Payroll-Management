@@ -14,6 +14,9 @@ class Document(models.Model):
         ACTIVE = 'Active', 'Active'
         ARCHIVED = 'Archived', 'Archived'
         DELETED = 'Deleted', 'Deleted'
+        PENDING = 'Pending Verification', 'Pending Verification'
+        APPROVED = 'Approved', 'Approved'
+        REJECTED = 'Rejected', 'Rejected'
 
     title = models.CharField(max_length=150)
     category = models.ForeignKey(
@@ -39,9 +42,9 @@ class Document(models.Model):
     description = models.TextField(blank=True, null=True)
     version = models.CharField(max_length=20, default='1.0')
     status = models.CharField(
-        max_length=20,
+        max_length=30,
         choices=Status.choices,
-        default=Status.ACTIVE
+        default=Status.PENDING
     )
     uploaded_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

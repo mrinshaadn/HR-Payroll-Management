@@ -13,7 +13,9 @@ import {
   Reports,
   Settings,
   Documents,
-  Recruitment
+  Recruitment,
+  UsersManagement,
+  HRManagement
 } from './pages';
 
 interface ProtectedRouteProps {
@@ -49,13 +51,25 @@ export default function App() {
             <Route path="dashboard" element={<Dashboard />} />
             
             <Route path="employees" element={
-              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER']}>
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR']}>
                 <Employees />
               </ProtectedRoute>
             } />
             <Route path="employees/:id" element={
-              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER']}>
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR']}>
                 <Profile />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="users" element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <UsersManagement />
+              </ProtectedRoute>
+            } />
+
+            <Route path="hr-management" element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <HRManagement />
               </ProtectedRoute>
             } />
             
@@ -64,13 +78,13 @@ export default function App() {
             <Route path="payroll" element={<Payroll />} />
             
             <Route path="recruitment" element={
-              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER']}>
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR']}>
                 <Recruitment />
               </ProtectedRoute>
             } />
             
             <Route path="analytics" element={
-              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER']}>
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR']}>
                 <Reports />
               </ProtectedRoute>
             } />
@@ -78,7 +92,7 @@ export default function App() {
             <Route path="documents" element={<Documents />} />
             
             <Route path="settings" element={
-              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER']}>
+              <ProtectedRoute allowedRoles={['ADMIN']}>
                 <Settings />
               </ProtectedRoute>
             } />

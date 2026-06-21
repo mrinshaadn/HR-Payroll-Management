@@ -19,6 +19,9 @@ class EmployeeSerializer(serializers.ModelSerializer):
     department_name = serializers.ReadOnlyField(source='department.name')
     designation_name = serializers.ReadOnlyField(source='designation.name')
     user_username = serializers.ReadOnlyField(source='user.username')
+    assigned_hr_name = serializers.SerializerMethodField(read_only=True)
+    assigned_hr_email = serializers.ReadOnlyField(source='assigned_hr.email', read_only=True)
+    assigned_hr_department = serializers.ReadOnlyField(source='assigned_hr.department', read_only=True)
     password = serializers.CharField(write_only=True, required=False, min_length=8)
     confirm_password = serializers.CharField(write_only=True, required=False)
 
@@ -31,8 +34,19 @@ class EmployeeSerializer(serializers.ModelSerializer):
             'designation_name', 'profile_picture', 'profile_image', 'salary',
             'employment_status', 'emergency_contact', 'is_active', 'is_deleted',
             'deleted_at', 'termination_date', 'termination_reason', 'termination_notes',
-            'created_at', 'updated_at', 'password', 'confirm_password'
+            'created_at', 'updated_at', 'password', 'confirm_password',
+            'assigned_hr', 'assigned_hr_name', 'assigned_hr_email', 'assigned_hr_department'
         ]
+
+    def get_assigned_hr_name(self, obj):
+        if obj.assigned_hr:
+            return f"{obj.assigned_hr.first_name} {obj.assigned_hr.last_name}".strip() or obj.assigned_hr.username
+        return ''
+
+    def validate_assigned_hr(self, value):
+        if value and value.role != 'HR':
+            raise serializers.ValidationError("Only users with role 'HR' can be assigned.")
+        return value
 
     def validate_profile_image(self, value):
         if value:
@@ -125,6 +139,13 @@ class EmployeeSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError({"password": "Password must be at least 8 characters long."})
                 if password != confirm_password:
                     raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
+                
+        request = self.context.get('request')
+        if request and request.user:
+            req_user = request.user
+            if (req_user.is_superuser or req_user.role == 'ADMIN') and not self.instance:
+                if not attrs.get('assigned_hr'):
+                    raise serializers.ValidationError({"assigned_hr": "Assigned HR Manager is required."})
                 
         return attrs
 

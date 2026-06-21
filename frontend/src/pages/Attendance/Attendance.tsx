@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useHR } from '../../context/HRContext';
 import { attendanceService } from '../../services/attendanceService';
 import { employeeService } from '../../services/employeeService';
+import { analyticsService } from '../../services/analyticsService';
 import { 
   Clock, 
   MapPin, 
@@ -43,11 +44,13 @@ export default function Attendance() {
     total_working_hours: 0,
     overtime_hours: 0
   });
+  const [attendanceAnalytics, setAttendanceAnalytics] = useState<any>(null);
 
   // Filters state
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [departments, setDepartments] = useState<Array<{ id: number; name: string }>>([]);
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>('');
+  const [roleFilter, setRoleFilter] = useState<string>('All');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
@@ -107,6 +110,9 @@ export default function Attendance() {
         if (selectedDepartmentId) {
           params.department = selectedDepartmentId;
         }
+        if (roleFilter !== 'All' && roleFilter !== 'All Roles') {
+          params.role = roleFilter;
+        }
       }
       if (statusFilter !== 'All') {
         params.status = statusFilter.toUpperCase();
@@ -141,6 +147,16 @@ export default function Attendance() {
           setMonthlyStats(stats);
         }
       }
+
+      // 3. Fetch Attendance Analytics if HR/Admin
+      if (isHR) {
+        try {
+          const data = await analyticsService.getAttendanceAnalytics();
+          setAttendanceAnalytics(data);
+        } catch (err) {
+          console.error('Failed to load attendance analytics:', err);
+        }
+      }
     } catch (err) {
       console.error('Failed to load attendance details:', err);
       addNotification('Error connecting to attendance server.', 'warning');
@@ -153,7 +169,7 @@ export default function Attendance() {
   useEffect(() => {
     loadData();
     setPage(1); // Reset page on filter change
-  }, [selectedEmployeeId, selectedDepartmentId, startDate, endDate, statusFilter, clockInActive]);
+  }, [selectedEmployeeId, selectedDepartmentId, startDate, endDate, statusFilter, roleFilter, clockInActive]);
 
   // Auto refresh attendance details and stats every 10 seconds
   useEffect(() => {
@@ -161,7 +177,7 @@ export default function Attendance() {
       loadData();
     }, 10000);
     return () => clearInterval(refreshTimer);
-  }, [selectedEmployeeId, selectedDepartmentId, startDate, endDate, statusFilter, clockInActive]);
+  }, [selectedEmployeeId, selectedDepartmentId, startDate, endDate, statusFilter, roleFilter, clockInActive]);
 
   // Handle Clock In click
   const handleClockIn = async () => {
@@ -359,142 +375,210 @@ export default function Attendance() {
       </div>
 
       {/* METRIC CARD STATS */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className={`grid gap-4 sm:grid-cols-2 ${isHR ? 'lg:grid-cols-9' : 'lg:grid-cols-5'}`}>
         
         {/* Today's Status */}
-        <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-805 dark:bg-slate-850">
+        <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-850 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Today's Status</span>
-            <div className="flex items-baseline space-x-2 mt-1">
-              <span className={`text-lg font-black uppercase ${
-                todayRecord ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500'
+            <span className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Today's Status</span>
+            <div className="flex items-baseline space-x-2 mt-2">
+              <span className={`text-xl font-black uppercase ${
+                todayRecord ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'
               }`}>
                 {todayRecord ? todayRecord.status : 'No Clock-In'}
               </span>
             </div>
           </div>
-          <div className="rounded-lg bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
-            <CalendarCheck className="h-4 w-4" />
+          <div className="rounded-lg bg-emerald-50 p-2.5 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+            <CalendarCheck className="h-5 w-5" />
           </div>
         </div>
 
         {/* Check In Time */}
-        <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-805 dark:bg-slate-850">
+        <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-850 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Check In Time</span>
-            <div className="flex items-baseline space-x-2 mt-1">
+            <span className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Check In Time</span>
+            <div className="flex items-baseline space-x-2 mt-2">
               <span className="text-xl font-extrabold text-slate-900 dark:text-white">
                 {todayRecord ? todayRecord.clockIn : '-'}
               </span>
             </div>
           </div>
-          <div className="rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
-            <Clock className="h-4 w-4" />
+          <div className="rounded-lg bg-blue-50 p-2.5 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
+            <Clock className="h-5 w-5" />
           </div>
         </div>
 
         {/* Check Out Time */}
-        <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-805 dark:bg-slate-850">
+        <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-850 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Check Out Time</span>
-            <div className="flex items-baseline space-x-2 mt-1">
+            <span className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Check Out Time</span>
+            <div className="flex items-baseline space-x-2 mt-2">
               <span className="text-xl font-extrabold text-slate-900 dark:text-white">
                 {todayRecord && todayRecord.clockOut && todayRecord.clockOut !== '-' ? todayRecord.clockOut : '-'}
               </span>
             </div>
           </div>
-          <div className="rounded-lg bg-indigo-50 p-2 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
-            <Clock className="h-4 w-4" />
+          <div className="rounded-lg bg-indigo-50 p-2.5 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
+            <Clock className="h-5 w-5" />
           </div>
         </div>
 
         {/* Total Working Hours */}
-        <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-805 dark:bg-slate-850">
+        <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-850 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Working Hours</span>
-            <div className="flex items-baseline space-x-2 mt-1">
+            <span className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Total Working Hours</span>
+            <div className="flex items-baseline space-x-2 mt-2">
               <span className="text-xl font-extrabold text-slate-900 dark:text-white">
                 {todayRecord ? todayRecord.workHours : '-'}
               </span>
             </div>
           </div>
-          <div className="rounded-lg bg-amber-50 p-2 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
-            <Clock className="h-4 w-4" />
+          <div className="rounded-lg bg-amber-50 p-2.5 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
+            <Clock className="h-5 w-5" />
           </div>
         </div>
 
         {/* Overtime Hours */}
-        <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-805 dark:bg-slate-850">
+        <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-850 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Overtime Hours</span>
-            <div className="flex items-baseline space-x-2 mt-1">
+            <span className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Overtime Hours</span>
+            <div className="flex items-baseline space-x-2 mt-2">
               <span className="text-xl font-extrabold text-slate-900 dark:text-white">
                 {todayRecord ? todayRecord.overtime : '0h 00m'}
               </span>
             </div>
           </div>
-          <div className="rounded-lg bg-rose-50 p-2 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
-            <TrendingUp className="h-4 w-4" />
+          <div className="rounded-lg bg-rose-50 p-2.5 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
+            <TrendingUp className="h-5 w-5" />
           </div>
         </div>
+
+        {/* Admin Present Today */}
+        {user?.role === 'ADMIN' && (
+          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-850 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+            <div>
+              <span className="text-[10px] font-black text-slate-700 dark:text-slate-305 uppercase tracking-wider block">Admin Present Today</span>
+              <div className="flex items-baseline space-x-2 mt-2">
+                <span className="text-xl font-extrabold text-slate-900 dark:text-white">
+                  {attendanceAnalytics?.total_admin_present_today !== undefined ? attendanceAnalytics.total_admin_present_today : '0'}
+                </span>
+              </div>
+            </div>
+            <div className="rounded-lg bg-purple-50 p-2.5 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400">
+              <CalendarCheck className="h-5 w-5" />
+            </div>
+          </div>
+        )}
+
+        {/* Total HR Present Today */}
+        {isHR && (
+          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-850 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+            <div>
+              <span className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">HR Present Today</span>
+              <div className="flex items-baseline space-x-2 mt-2">
+                <span className="text-xl font-extrabold text-slate-900 dark:text-white">
+                  {attendanceAnalytics?.total_hr_present_today !== undefined ? attendanceAnalytics.total_hr_present_today : '0'}
+                </span>
+              </div>
+            </div>
+            <div className="rounded-lg bg-indigo-50 p-2.5 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
+              <CalendarCheck className="h-5 w-5" />
+            </div>
+          </div>
+        )}
+
+        {/* Total Employees Present Today */}
+        {isHR && (
+          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-850 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+            <div>
+              <span className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Employee Present Today</span>
+              <div className="flex items-baseline space-x-2 mt-2">
+                <span className="text-xl font-extrabold text-slate-900 dark:text-white">
+                  {attendanceAnalytics?.total_employees_present_today !== undefined ? attendanceAnalytics.total_employees_present_today : '0'}
+                </span>
+              </div>
+            </div>
+            <div className="rounded-lg bg-emerald-50 p-2.5 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-450">
+              <CalendarCheck className="h-5 w-5" />
+            </div>
+          </div>
+        )}
+
+        {/* Total Present */}
+        {isHR && (
+          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-850 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+            <div>
+              <span className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Total Present</span>
+              <div className="flex items-baseline space-x-2 mt-2">
+                <span className="text-xl font-extrabold text-slate-900 dark:text-white">
+                  {attendanceAnalytics?.present_today !== undefined ? attendanceAnalytics.present_today : '0'}
+                </span>
+              </div>
+            </div>
+            <div className="rounded-lg bg-slate-50 p-2.5 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <CalendarCheck className="h-5 w-5" />
+            </div>
+          </div>
+        )}
 
       </div>
 
       {/* ATTENDANCE HISTORY SUMMARY */}
-      <div className="space-y-2">
-        <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+      <div className="space-y-3">
+        <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
           History Summary Statistics
         </h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Present */}
-          <div className="flex items-center justify-between rounded-xl border-l-4 border-emerald-500 bg-white p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 dark:border-slate-800 dark:bg-slate-850">
+          <div className="flex items-center justify-between rounded-xl border-l-4 border-emerald-500 border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 dark:border-slate-800 dark:bg-slate-850">
             <div>
-              <span className="text-xs font-extrabold text-slate-500 dark:text-white uppercase tracking-wider block">Present</span>
-              <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1 block">
+              <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Present</span>
+              <span className="text-3xl font-black text-emerald-600 dark:text-emerald-450 mt-1 block">
                 {summaryCounts.Present + summaryCounts.WFH}
               </span>
             </div>
-            <div className="rounded-lg bg-emerald-100 p-2.5 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
-              <CheckCircle2 className="h-4.5 w-4.5" />
+            <div className="rounded-lg bg-emerald-100 p-2.5 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400">
+              <CheckCircle2 className="h-5 w-5" />
             </div>
           </div>
 
           {/* Absent */}
-          <div className="flex items-center justify-between rounded-xl border-l-4 border-rose-500 bg-white p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 dark:border-slate-800 dark:bg-slate-850">
+          <div className="flex items-center justify-between rounded-xl border-l-4 border-rose-500 border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 dark:border-slate-800 dark:bg-slate-850">
             <div>
-              <span className="text-xs font-extrabold text-slate-500 dark:text-white uppercase tracking-wider block">Absent</span>
-              <span className="text-3xl font-black text-rose-600 dark:text-rose-400 mt-1 block">
+              <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Absent</span>
+              <span className="text-3xl font-black text-rose-600 dark:text-rose-455 mt-1 block">
                 {summaryCounts.Absent}
               </span>
             </div>
-            <div className="rounded-lg bg-rose-100 p-2.5 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
-              <UserX className="h-4.5 w-4.5" />
+            <div className="rounded-lg bg-rose-100 p-2.5 text-rose-800 dark:bg-rose-950/60 dark:text-rose-400">
+              <UserX className="h-5 w-5" />
             </div>
           </div>
 
           {/* Late */}
-          <div className="flex items-center justify-between rounded-xl border-l-4 border-amber-500 bg-white p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 dark:border-slate-800 dark:bg-slate-850">
+          <div className="flex items-center justify-between rounded-xl border-l-4 border-amber-500 border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 dark:border-slate-800 dark:bg-slate-850">
             <div>
-              <span className="text-xs font-extrabold text-slate-500 dark:text-white uppercase tracking-wider block">Late</span>
-              <span className="text-3xl font-black text-amber-600 dark:text-amber-400 mt-1 block">
+              <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">Late</span>
+              <span className="text-3xl font-black text-amber-600 dark:text-amber-450 mt-1 block">
                 {summaryCounts.Late}
               </span>
             </div>
-            <div className="rounded-lg bg-amber-100 p-2.5 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
-              <Clock className="h-4.5 w-4.5" />
+            <div className="rounded-lg bg-amber-100 p-2.5 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400">
+              <Clock className="h-5 w-5" />
             </div>
           </div>
 
           {/* On Leave */}
-          <div className="flex items-center justify-between rounded-xl border-l-4 border-blue-500 bg-white p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 dark:border-slate-800 dark:bg-slate-850">
+          <div className="flex items-center justify-between rounded-xl border-l-4 border-blue-500 border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 dark:border-slate-800 dark:bg-slate-850">
             <div>
-              <span className="text-xs font-extrabold text-slate-500 dark:text-white uppercase tracking-wider block">On Leave</span>
-              <span className="text-3xl font-black text-blue-600 dark:text-blue-400 mt-1 block">
+              <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">On Leave</span>
+              <span className="text-3xl font-black text-blue-600 dark:text-blue-450 mt-1 block">
                 {summaryCounts.Leave}
               </span>
             </div>
-            <div className="rounded-lg bg-blue-100 p-2.5 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
-              <Calendar className="h-4.5 w-4.5" />
+            <div className="rounded-lg bg-blue-100 p-2.5 text-blue-800 dark:bg-blue-950/60 dark:text-blue-400">
+              <Calendar className="h-5 w-5" />
             </div>
           </div>
         </div>
@@ -507,23 +591,23 @@ export default function Attendance() {
         <div className="space-y-6">
           
           {/* LIVE TERMINAL CLOCK ELEMENT */}
-          <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-805 dark:bg-slate-850 text-center relative overflow-hidden">
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-850 text-center relative overflow-hidden transition-all duration-200 hover:shadow-md">
             <div className="absolute top-0 right-0 h-16 w-16 bg-blue-500/10 rounded-bl-full flex items-center justify-center">
-              <MapPin className="h-4 w-4 text-blue-500" />
+              <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
             
-            <span className="text-[10px] font-extrabold tracking-wider text-slate-400 uppercase">Live Operations Terminal</span>
+            <span className="text-[10px] font-black tracking-wider text-slate-700 dark:text-slate-300 uppercase">Live Operations Terminal</span>
             <h2 className="text-3xl font-black text-slate-900 dark:text-white mt-2 font-mono">
               {currentTime.toLocaleTimeString()}
             </h2>
-            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-1">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
               {currentTime.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
 
             {/* Shift Detail badge */}
-            <div className="mt-4 inline-flex items-center space-x-1.5 rounded-full bg-slate-50 dark:bg-slate-800 px-3 py-1 text-xs">
+            <div className="mt-4 inline-flex items-center space-x-1.5 rounded-full bg-slate-50 dark:bg-slate-800 px-3 py-1.5 text-xs">
               <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-              <span className="font-bold text-slate-600 dark:text-slate-350">Default Shift: 09:00 AM - 05:00 PM</span>
+              <span className="font-bold text-slate-700 dark:text-slate-305">Default Shift: 09:00 AM - 05:00 PM</span>
             </div>
 
             {/* Separate Check In and Check Out buttons */}
@@ -534,7 +618,7 @@ export default function Attendance() {
                 className={`w-full py-3 rounded-xl font-black text-sm tracking-wide shadow-md transition-all duration-200 transform active:scale-[0.98] flex items-center justify-center space-x-2 ${
                   !!todayRecord && !!todayRecord.clockIn && todayRecord.clockIn !== '-'
                     ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed shadow-none'
-                    : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-950/20'
+                    : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-950/20 cursor-pointer'
                 }`}
               >
                 <Clock className="h-4 w-4" />
@@ -550,7 +634,7 @@ export default function Attendance() {
                   className={`w-full py-3 rounded-xl font-black text-sm tracking-wide shadow-md transition-all duration-200 transform active:scale-[0.98] flex items-center justify-center space-x-2 ${
                     !!todayRecord && !!todayRecord.clockOut && todayRecord.clockOut !== '-'
                       ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed shadow-none'
-                      : 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-950/20'
+                      : 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-950/20 cursor-pointer'
                   }`}
                 >
                   <Clock className="h-4 w-4" />
@@ -562,21 +646,21 @@ export default function Attendance() {
             </div>
 
             {/* Success details / last transaction */}
-            <div className="mt-4 border-t border-slate-50 dark:border-slate-800/60 pt-4 grid grid-cols-2 gap-2 text-left text-xs font-bold text-slate-500">
-              <div className="bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-lg">
-                <span className="text-[9px] uppercase tracking-wider text-slate-400 block">Checked In</span>
-                <span className="text-slate-800 dark:text-white mt-1 block font-mono">
+            <div className="mt-4 border-t border-slate-100 dark:border-slate-800/60 pt-4 grid grid-cols-2 gap-2 text-left text-xs font-bold text-slate-600 dark:text-slate-300">
+              <div className="bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
+                <span className="text-[9px] uppercase tracking-wider text-slate-500 dark:text-slate-400 block font-bold">Checked In</span>
+                <span className="text-slate-900 dark:text-white mt-1 block font-mono font-bold">
                   {todayRecord?.clockIn || '-'}
                 </span>
               </div>
-              <div className="bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-lg">
-                <span className="text-[9px] uppercase tracking-wider text-slate-400 block">Checked Out</span>
-                <span className="text-slate-800 dark:text-white mt-1 block font-mono">
+              <div className="bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
+                <span className="text-[9px] uppercase tracking-wider text-slate-500 dark:text-slate-400 block font-bold">Checked Out</span>
+                <span className="text-slate-900 dark:text-white mt-1 block font-mono font-bold">
                   {todayRecord?.clockOut && todayRecord.clockOut !== '-' ? todayRecord.clockOut : '-'}
                 </span>
               </div>
               {clockInActive && (
-                <div className="col-span-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 p-2 rounded-lg text-center font-bold text-[10px] tracking-wide flex items-center justify-center space-x-1">
+                <div className="col-span-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-450 p-2 rounded-lg text-center font-bold text-[10px] tracking-wide flex items-center justify-center space-x-1 mt-1 border border-emerald-500/20">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   <span>Session Active: Logged in and recording hours</span>
                 </div>
@@ -586,29 +670,31 @@ export default function Attendance() {
 
           {/* DYNAMIC SHIFT ALLOCATION PIE CHART */}
           {shiftDistribution.length > 0 && (
-            <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-805 dark:bg-slate-850">
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-4 pb-2 border-b border-slate-50 dark:border-slate-800">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-850 transition-all duration-200 hover:shadow-md">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-4 pb-2 border-b border-slate-200 dark:border-slate-800">
                 Monthly Breakdown
               </h4>
               
               <div className="flex items-center justify-between">
                 <div className="h-28 w-28">
-                  <PieChart width={112} height={112}>
-                    <Pie data={shiftDistribution.filter(s => s.value > 0)} innerRadius={22} outerRadius={34} dataKey="value">
-                      {shiftDistribution.filter(s => s.value > 0).map((e, index) => (
-                        <Cell key={`cell-${index}`} fill={e.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={shiftDistribution.filter(s => s.value > 0)} innerRadius={22} outerRadius={34} dataKey="value">
+                        {shiftDistribution.filter(s => s.value > 0).map((e, index) => (
+                          <Cell key={`cell-${index}`} fill={e.color} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-                <div className="flex-1 pl-4 space-y-1.5 text-[10px] font-bold text-slate-500">
+                <div className="flex-1 pl-4 space-y-2 text-[10px] font-bold text-slate-700 dark:text-slate-300">
                   {shiftDistribution.map((entry, idx) => (
                     <div key={idx} className="flex items-center justify-between">
                       <div className="flex items-center space-x-1.5">
-                        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                        <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
                         <span>{entry.name}</span>
                       </div>
-                      <span className="text-slate-850 dark:text-white">{entry.value}%</span>
+                      <span className="text-slate-900 dark:text-white font-black">{entry.value}%</span>
                     </div>
                   ))}
                 </div>
@@ -621,38 +707,39 @@ export default function Attendance() {
         <div className="space-y-6 lg:col-span-2">
           
           {/* SEARCH & FILTERS CONTROL BAR */}
-          <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-805 dark:bg-slate-850 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-50 dark:border-slate-800/60">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
-                <Filter className="h-4 w-4 text-blue-500" />
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-850 space-y-4 transition-all duration-200 hover:shadow-md">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center space-x-1.5">
+                <Filter className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <span>Filters and Query Controls</span>
               </h3>
-              {(selectedEmployeeId || selectedDepartmentId || startDate || endDate || statusFilter !== 'All') && (
+              {(selectedEmployeeId || selectedDepartmentId || roleFilter !== 'All' || startDate || endDate || statusFilter !== 'All') && (
                 <button
                   onClick={() => {
                     setSelectedEmployeeId('');
                     setSelectedDepartmentId('');
+                    setRoleFilter('All');
                     setStartDate('');
                     setEndDate('');
                     setStatusFilter('All');
                   }}
-                  className="text-[10px] font-bold text-blue-500 hover:underline"
+                  className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
                 >
                   Clear All Filters
                 </button>
               )}
             </div>
 
-            <div className={`grid gap-3 sm:grid-cols-2 ${isHR ? 'md:grid-cols-5' : 'md:grid-cols-4'}`}>
+            <div className={`grid gap-4 sm:grid-cols-2 ${isHR ? 'md:grid-cols-3 lg:grid-cols-6' : 'md:grid-cols-4'}`}>
               
               {/* HR: Filter by specific Employee */}
               {isHR ? (
                 <div>
-                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300 mb-1">Employee</label>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 mb-1.5">Employee</label>
                   <select
                     value={selectedEmployeeId}
                     onChange={(e) => setSelectedEmployeeId(e.target.value)}
-                    className="h-8.5 w-full rounded-md border border-slate-200 bg-slate-50 px-2 text-[11px] font-bold text-slate-700 focus:outline-none dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                    className="h-9 w-full rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-bold text-slate-850 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:border-brand-blue"
                   >
                     <option value="">All Team Staff</option>
                     {employees.map(emp => (
@@ -662,12 +749,12 @@ export default function Attendance() {
                 </div>
               ) : (
                 <div>
-                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300 mb-1">Employee Name</label>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 mb-1.5">Employee Name</label>
                   <input
                     type="text"
                     readOnly
                     value={user?.name || ''}
-                    className="h-8.5 w-full rounded-md border border-slate-200 bg-slate-100 px-2 text-[11px] font-bold text-slate-500 focus:outline-none dark:border-slate-800 dark:bg-slate-800/40"
+                    className="h-9 w-full rounded-md border border-slate-300 bg-slate-100 px-2 text-xs font-bold text-slate-600 focus:outline-none dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-300"
                   />
                 </div>
               )}
@@ -675,11 +762,11 @@ export default function Attendance() {
               {/* HR: Filter by Department */}
               {isHR && (
                 <div>
-                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300 mb-1">Department</label>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 mb-1.5">Department</label>
                   <select
                     value={selectedDepartmentId}
                     onChange={(e) => setSelectedDepartmentId(e.target.value)}
-                    className="h-8.5 w-full rounded-md border border-slate-200 bg-slate-50 px-2 text-[11px] font-bold text-slate-700 focus:outline-none dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                    className="h-9 w-full rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-bold text-slate-850 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:border-brand-blue"
                   >
                     <option value="">All Departments</option>
                     {departments.map(dept => (
@@ -689,13 +776,30 @@ export default function Attendance() {
                 </div>
               )}
 
+              {/* HR: Filter by Role */}
+              {isHR && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 mb-1.5">Role</label>
+                  <select
+                    value={roleFilter}
+                    onChange={(e) => setRoleFilter(e.target.value)}
+                    className="h-9 w-full rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-bold text-slate-850 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:border-brand-blue"
+                  >
+                    <option value="All">All Roles</option>
+                    <option value="Admin">Admin</option>
+                    <option value="HR">HR</option>
+                    <option value="Employee">Employee</option>
+                  </select>
+                </div>
+              )}
+
               {/* Status Filter */}
               <div>
-                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300 mb-1">Status</label>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 mb-1.5">Status</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="h-8.5 w-full rounded-md border border-slate-200 bg-slate-50 px-2 text-[11px] font-bold text-slate-700 focus:outline-none dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                  className="h-9 w-full rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-bold text-slate-850 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:border-brand-blue"
                 >
                   <option value="All">All Clockings</option>
                   <option value="Present">Present</option>
@@ -707,23 +811,23 @@ export default function Attendance() {
 
               {/* Start Date */}
               <div>
-                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300 mb-1">Start Date</label>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 mb-1.5">Start Date</label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="h-8.5 w-full rounded-md border border-slate-200 bg-slate-50 px-2 text-[11px] font-bold text-slate-750 focus:outline-none dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                  className="h-9 w-full rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-bold text-slate-850 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:border-brand-blue"
                 />
               </div>
 
               {/* End Date */}
               <div>
-                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300 mb-1">End Date</label>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 mb-1.5">End Date</label>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="h-8.5 w-full rounded-md border border-slate-200 bg-slate-50 px-2 text-[11px] font-bold text-slate-750 focus:outline-none dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                  className="h-9 w-full rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-bold text-slate-850 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:border-brand-blue"
                 />
               </div>
 
@@ -732,11 +836,11 @@ export default function Attendance() {
 
           {/* DALLAS TIME CHART */}
           {trendData.length > 0 && (
-            <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-805 dark:bg-slate-850">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-850 transition-all duration-200 hover:shadow-md">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
                 <div>
-                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Headcount Working Hours Trend</h3>
-                  <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-0.5">Hours logged per active shift</p>
+                  <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200">Headcount Working Hours Trend</h3>
+                  <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-0.5">Hours logged per active shift</p>
                 </div>
               </div>
               <div className="h-44 w-full mt-4" ref={containerRef}>
@@ -749,9 +853,9 @@ export default function Attendance() {
                           <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <XAxis dataKey="day" tick={{ fontSize: 9 }} stroke="#94a3b8" />
-                      <YAxis tick={{ fontSize: 9 }} stroke="#94a3b8" />
-                      <Tooltip contentStyle={{ fontSize: '10px' }} />
+                      <XAxis dataKey="day" tick={{ fontSize: 9, fontWeight: 'bold' }} stroke="#64748b" />
+                      <YAxis tick={{ fontSize: 9, fontWeight: 'bold' }} stroke="#64748b" />
+                      <Tooltip contentStyle={{ fontSize: '10px', backgroundColor: '#1e293b', color: '#fff', border: 'none' }} />
                       <Area type="monotone" dataKey="hours" stroke="#2563eb" strokeWidth={2.5} fillOpacity={1} fill="url(#attendanceColor)" />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -761,23 +865,26 @@ export default function Attendance() {
           )}
 
           {/* MAIN DAILY ATTENDANCE LEDGER TABLE */}
-          <div className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm dark:border-slate-805 dark:bg-slate-850">
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-850 transition-all duration-200 hover:shadow-md">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:border-slate-800 dark:bg-slate-800/40">
-                    <th className="px-6 py-3">Employee Name</th>
-                    <th className="px-6 py-3">Clock In</th>
-                    <th className="px-6 py-3">Clock Out</th>
-                    <th className="px-6 py-3">Hours</th>
-                    <th className="px-6 py-3">Overtime</th>
-                    <th className="px-6 py-3">Status</th>
+                  <tr className="border-b border-slate-200 bg-slate-50/70 text-[10px] font-extrabold uppercase tracking-wider text-slate-700 dark:border-slate-800 dark:bg-slate-800/40">
+                    <th className="px-6 py-4">Employee Name</th>
+                    <th className="px-6 py-4">Role</th>
+                    <th className="px-6 py-4">Assigned HR</th>
+                    <th className="px-6 py-4">Department</th>
+                    <th className="px-6 py-4">Check In</th>
+                    <th className="px-6 py-4">Check Out</th>
+                    <th className="px-6 py-4">Hours Worked</th>
+                    <th className="px-6 py-4">Overtime</th>
+                    <th className="px-6 py-4">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-xs font-medium dark:divide-slate-800/40">
+                <tbody className="divide-y divide-slate-100 text-xs font-semibold dark:divide-slate-800/40">
                   {isLoading ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-10 text-center text-slate-400">
+                      <td colSpan={9} className="px-6 py-10 text-center text-slate-500">
                         <div className="flex flex-col items-center justify-center space-y-2">
                           <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
                           <span className="text-[10px] uppercase font-bold tracking-wider">Synchronizing record logs...</span>
@@ -786,11 +893,11 @@ export default function Attendance() {
                     </tr>
                   ) : paginatedRecords.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                      <td colSpan={9} className="px-6 py-12 text-center text-slate-500">
                         <div className="flex flex-col items-center justify-center space-y-2 py-4">
-                          <AlertCircle className="h-8 w-8 text-slate-350" />
+                          <AlertCircle className="h-8 w-8 text-slate-400" />
                           <span className="font-bold text-xs text-slate-800 dark:text-slate-300">No attendance history found</span>
-                          <span className="text-[10px] text-slate-450 max-w-xs leading-normal">
+                          <span className="text-[10px] text-slate-500 max-w-xs leading-normal">
                             We couldn't locate any records matching your chosen filters. Please check filters or log a clocking.
                           </span>
                         </div>
@@ -798,36 +905,56 @@ export default function Attendance() {
                     </tr>
                   ) : (
                     paginatedRecords.map((rec) => (
-                      <tr key={rec.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/10">
+                      <tr key={rec.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                         
-                        <td className="px-6 py-3.5">
-                          <div className="flex items-center space-x-2.5">
-                            <img src={rec.avatar} alt="User" className="h-7.5 w-7.5 rounded-full object-cover border border-slate-100 dark:border-slate-800" />
+                        <td className="px-6 py-4">
+                          <div className="flex items-center space-x-3">
+                            <img src={rec.avatar} alt="User" className="h-8 w-8 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
                             <div>
-                              <p className="font-extrabold text-slate-800 dark:text-slate-200 leading-tight">{rec.name}</p>
-                              <p className="text-[9px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">{rec.employeeId}</p>
+                              <p className="font-extrabold text-slate-900 dark:text-slate-100 leading-tight">{rec.name}</p>
+                              <p className="text-[9px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">{rec.employeeId}</p>
                             </div>
                           </div>
                         </td>
 
-                        <td className="px-6 py-3.5 font-mono text-slate-650 dark:text-slate-350">{rec.clockIn}</td>
-                        <td className="px-6 py-3.5 font-mono text-slate-650 dark:text-slate-350">{rec.clockOut}</td>
-                        <td className="px-6 py-3.5 text-slate-600 dark:text-slate-400">{rec.workHours}</td>
-                        <td className="px-6 py-3.5 font-mono text-slate-600 dark:text-slate-400">{rec.overtime}</td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase ${
+                            rec.employeeRole === 'ADMIN'
+                              ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-305'
+                              : rec.employeeRole === 'HR'
+                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
+                              : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-350'
+                          }`}>
+                            {rec.employeeRole || 'EMPLOYEE'}
+                          </span>
+                        </td>
+
+                        <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">
+                          {rec.employeeAssignedHR || 'Unassigned'}
+                        </td>
+
+                        <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">
+                          {rec.employeeDepartment || 'General'}
+                        </td>
+
+                        <td className="px-6 py-4 font-mono text-slate-700 dark:text-slate-300 font-bold">{rec.clockIn}</td>
+                        <td className="px-6 py-4 font-mono text-slate-700 dark:text-slate-300 font-bold">{rec.clockOut}</td>
+                        <td className="px-6 py-4 text-slate-800 dark:text-slate-200 font-bold">{rec.workHours}</td>
+                        <td className="px-6 py-4 font-mono text-slate-800 dark:text-slate-200 font-bold">{rec.overtime}</td>
                         
-                        <td className="px-6 py-3.5">
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase ${
                             rec.status === 'Present'
-                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-350'
                               : rec.status === 'Late'
-                              ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'
+                              ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-350'
                               : rec.status === 'Half Day'
-                              ? 'bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-400'
+                              ? 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-355'
                               : rec.status === 'Leave'
-                              ? 'bg-purple-50 text-purple-700 dark:bg-purple-950/30 dark:text-purple-400'
+                              ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300'
                               : rec.status === 'WFH'
-                              ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400'
-                              : 'bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400'
+                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
+                              : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-350'
                           }`}>
                             {rec.status}
                           </span>
@@ -842,8 +969,8 @@ export default function Attendance() {
 
             {/* LEDGER PAGINATION CONTROL */}
             {historyRecords.length > pageSize && (
-              <div className="flex items-center justify-between border-t border-slate-100 bg-white px-6 py-3 dark:border-slate-800/80 dark:bg-slate-850">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase">
+              <div className="flex items-center justify-between border-t border-slate-200 bg-white px-6 py-3.5 dark:border-slate-800/80 dark:bg-slate-850">
+                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">
                   Showing {startIndex + 1} - {Math.min(startIndex + pageSize, historyRecords.length)} of {historyRecords.length} records
                 </span>
                 
@@ -851,7 +978,7 @@ export default function Attendance() {
                   <button
                     disabled={page === 1}
                     onClick={() => setPage(prev => Math.max(prev - 1, 1))}
-                    className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
@@ -861,7 +988,7 @@ export default function Attendance() {
                   <button
                     disabled={page === totalPages}
                     onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
-                    className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>

@@ -20,6 +20,10 @@ export const mapBackendEmployeeToFrontend = (data: any): Employee => {
     termination_date: data.termination_date || null,
     termination_reason: data.termination_reason || null,
     termination_notes: data.termination_notes || null,
+    assigned_hr: data.assigned_hr || null,
+    assigned_hr_name: data.assigned_hr_name || '',
+    assigned_hr_email: data.assigned_hr_email || '',
+    assigned_hr_department: data.assigned_hr_department || '',
     personalInfo: {
       fullName: `${data.first_name} ${data.last_name}`.trim(),
       emailAddress: data.email || '',
@@ -99,6 +103,7 @@ export const employeeService = {
         emergency_contact: JSON.stringify({ name: 'Emergency Ref', phone: '555-0100' }),
       };
 
+      if (data.assigned_hr) payload.assigned_hr = data.assigned_hr;
       if (data.password) payload.password = data.password;
       if (data.confirm_password) payload.confirm_password = data.confirm_password;
 
@@ -138,6 +143,7 @@ export const employeeService = {
       if (data.location) patchData.address = data.location;
       if (data.status) patchData.employment_status = data.status;
       if (data.salary !== undefined) patchData.salary = String(data.salary);
+      if (data.assigned_hr !== undefined) patchData.assigned_hr = data.assigned_hr;
       if (data.password) patchData.password = data.password;
       if (data.confirm_password) patchData.confirm_password = data.confirm_password;
 
@@ -283,6 +289,16 @@ export const employeeService = {
       return response.data.results || response.data;
     } catch (error) {
       console.error('Error fetching designations:', error);
+      return [];
+    }
+  },
+
+  getHRStaff: async (): Promise<Array<{ id: number; username: string; full_name: string; is_active: boolean }>> => {
+    try {
+      const response = await api.get('/hr/');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching HR staff:', error);
       return [];
     }
   }

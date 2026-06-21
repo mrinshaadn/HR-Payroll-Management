@@ -64,8 +64,17 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         if not (user.is_superuser or user.role in ['ADMIN', 'HR']):
             if self.action == 'list':
                 if hasattr(user, 'employee_profile'):
-                    return queryset.filter(employee_id=user.employee_profile.employee_id)
-                return queryset.none()
+                    queryset = queryset.filter(employee_id=user.employee_profile.employee_id)
+                else:
+                    queryset = queryset.none()
+        elif user.role == 'HR' and not user.is_superuser:
+            # HR can only see their assigned employees
+            queryset = queryset.filter(assigned_hr=user)
+        elif user.role == 'ADMIN' or user.is_superuser:
+            # Admin can filter by HR user ID
+            hr_param = self.request.query_params.get('hr')
+            if hr_param and hr_param != 'All':
+                queryset = queryset.filter(assigned_hr_id=hr_param)
         
         # Filter by department
         dept_id = self.request.query_params.get('department')
@@ -85,7 +94,11 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        employee = serializer.save()
+        user = self.request.user
+        if user.role == 'HR' and not user.is_superuser:
+            employee = serializer.save(assigned_hr=user)
+        else:
+            employee = serializer.save()
         # Audit Log
         EmployeeAuditLog.objects.create(
             employee=employee,

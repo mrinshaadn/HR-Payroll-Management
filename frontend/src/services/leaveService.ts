@@ -24,6 +24,7 @@ export const mapBackendLeaveToFrontend = (data: any): LeaveRequest => {
     status: (data.status || 'Pending').toUpperCase() as LeaveRequest['status'],
     startDate: data.start_date,
     endDate: data.end_date,
+    employeeRole: data.employee_role,
   };
 };
 

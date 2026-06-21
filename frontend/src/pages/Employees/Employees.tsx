@@ -89,7 +89,8 @@ export default function Employees() {
     terminateEmployee, 
     restoreEmployee, 
     addNotification, 
-    isLoading 
+    isLoading,
+    user
   } = useHR();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -103,6 +104,9 @@ export default function Employees() {
   const [selectedLoc, setSelectedLoc] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [selectedEmploymentType, setSelectedEmploymentType] = useState('All');
+  const [hrStaff, setHrStaff] = useState<any[]>([]);
+  const [selectedHR, setSelectedHR] = useState('All');
+  const [formAssignedHR, setFormAssignedHR] = useState<string>('');
 
   // Sorting
   const [sortField, setSortField] = useState<SortField>('id');
@@ -163,18 +167,20 @@ export default function Employees() {
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
-        const [depts, desigs] = await Promise.all([
+        const [depts, desigs, hrs] = await Promise.all([
           employeeService.getDepartments(),
-          employeeService.getDesignations()
+          employeeService.getDesignations(),
+          employeeService.getHRStaff()
         ]);
         setDbDepartments(depts);
         setDbDesignations(desigs);
+        setHrStaff(hrs.filter((h: any) => h.is_active));
         if (depts.length > 0) {
           setFormDept(depts[0].name);
         }
       } catch (err) {
         console.error('Failed to load metadata:', err);
-        setMetadataError('Failed to load departments and designations from backend.');
+        setMetadataError('Failed to load departments, designations, and HR staff from backend.');
       }
     };
     fetchMetadata();
@@ -194,13 +200,33 @@ export default function Employees() {
     }
   }, [formDept, dbDesignations]);
 
-  // Sync search parameter
+  // Sync search parameter and handle candidate-to-employee conversion
   useEffect(() => {
     const queryParam = searchParams.get('search');
     if (queryParam) {
       setSearchQuery(queryParam);
     }
-  }, [searchParams]);
+
+    const convName = searchParams.get('convert_name');
+    const convEmail = searchParams.get('convert_email');
+    const convPhone = searchParams.get('convert_phone');
+    const convRole = searchParams.get('convert_role');
+    if (convName) {
+      setFormName(convName);
+      setFormEmail(convEmail || '');
+      setFormPhone(convPhone || '');
+      setFormRole(convRole || '');
+      setFormLoc('New York Office');
+      setFormSalary(600000);
+      setFormStatus('ACTIVE');
+      setFormPassword('Welcome123!');
+      setFormConfirmPassword('Welcome123!');
+      setShowAddModal(true);
+      
+      // Clean up parameters to prevent repeating on reload
+      navigate('/employees', { replace: true });
+    }
+  }, [searchParams, navigate]);
 
   // Aggregate Lists for Select Filters dynamically
   const departmentsList = ['All', ...Array.from(new Set(employees.map(e => e.department)))];
@@ -238,6 +264,10 @@ export default function Employees() {
       addNotification('Please fill in Name, Email, and Designation.', 'warning');
       return;
     }
+    if (user?.role === 'ADMIN' && !formAssignedHR) {
+      addNotification('Please select an Assigned HR Representative.', 'warning');
+      return;
+    }
     if (!formPassword) {
       addNotification('Password is required for user account.', 'warning');
       return;
@@ -265,6 +295,7 @@ export default function Employees() {
         salary: formSalary !== '' ? Number(formSalary) : 0,
         password: formPassword,
         confirm_password: formConfirmPassword,
+        assigned_hr: user?.role === 'ADMIN' && formAssignedHR ? Number(formAssignedHR) : undefined,
       }, profileImageFile);
       
       setFormName('');
@@ -277,6 +308,7 @@ export default function Employees() {
       setProfileImagePreview('');
       setFormPassword('');
       setFormConfirmPassword('');
+      setFormAssignedHR('');
       setShowAddModal(false);
     } catch (err: any) {
       console.error('Error adding employee:', err);
@@ -321,6 +353,7 @@ export default function Employees() {
             setProfileImagePreview('');
             setFormPassword('');
             setFormConfirmPassword('');
+            setFormAssignedHR('');
             setShowAddModal(false);
           } catch (restoreErr) {
             console.error('Error restoring employee:', restoreErr);
@@ -365,12 +398,14 @@ export default function Employees() {
           salary: Number(formSalary),
           password: formPassword || undefined,
           confirm_password: formConfirmPassword || undefined,
+          assigned_hr: user?.role === 'ADMIN' && formAssignedHR ? Number(formAssignedHR) : undefined,
         }, profileImageFile);
         
         setProfileImageFile(null);
         setProfileImagePreview('');
         setFormPassword('');
         setFormConfirmPassword('');
+        setFormAssignedHR('');
         setShowEditModal(false);
         setEditingEmp(null);
       } catch (err) {
@@ -396,6 +431,7 @@ export default function Employees() {
     setProfileImagePreview(emp.avatar || '');
     setFormPassword('');
     setFormConfirmPassword('');
+    setFormAssignedHR(emp.assigned_hr ? String(emp.assigned_hr) : '');
     setShowEditModal(true);
   };
 
@@ -590,6 +626,7 @@ export default function Employees() {
     const matchesDept = selectedDept === 'All' || emp.department === selectedDept;
     const matchesLoc = selectedLoc === 'All' || emp.location === selectedLoc;
     const matchesStatus = selectedStatus === 'All' || emp.status === selectedStatus;
+    const matchesHR = selectedHR === 'All' || String(emp.assigned_hr) === String(selectedHR);
     
     // Tab filters
     let matchesTab = true;
@@ -601,7 +638,7 @@ export default function Employees() {
       matchesTab = emp.status === 'RESIGNED';
     }
 
-    return matchesSearch && matchesDept && matchesLoc && matchesStatus && matchesTab;
+    return matchesSearch && matchesDept && matchesLoc && matchesStatus && matchesTab && matchesHR;
   });
 
   // Sorting logic
@@ -775,7 +812,7 @@ export default function Employees() {
         </div>
 
         {/* Multi-parameter select lists */}
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className={`grid gap-3 ${user?.role === 'ADMIN' ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Filter Department</label>
             <select
@@ -814,6 +851,22 @@ export default function Employees() {
               ))}
             </select>
           </div>
+
+          {user?.role === 'ADMIN' && (
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Filter Assigned HR</label>
+              <select
+                value={selectedHR}
+                onChange={(e) => setSelectedHR(e.target.value)}
+                className="mt-1 h-9 w-full rounded-md border border-slate-200 bg-slate-50/50 px-2.5 text-xs text-slate-700 font-bold dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300 focus:outline-none"
+              >
+                <option value="All">All HR</option>
+                {hrStaff.map((hr) => (
+                  <option key={hr.id} value={hr.id}>{hr.full_name}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
       </div>
@@ -870,6 +923,7 @@ export default function Employees() {
                   </button>
                 </th>
                 <th className="px-6 py-3.5">STATUS</th>
+                <th className="px-6 py-3.5">ASSIGNED HR</th>
                 <th className="px-6 py-3.5">LOCATION</th>
                 <th className="px-6 py-3.5">
                   <button onClick={() => toggleSort('joinDate')} className="flex items-center space-x-1 hover:text-slate-650 focus:outline-none">
@@ -883,7 +937,7 @@ export default function Employees() {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-semibold text-slate-400 dark:text-slate-500">
+                  <td colSpan={8} className="px-6 py-12 text-center text-xs font-semibold text-slate-400 dark:text-slate-500">
                     <div className="flex items-center justify-center space-x-2">
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
                       <span>Synchronizing database...</span>
@@ -892,7 +946,7 @@ export default function Employees() {
                 </tr>
               ) : sortedEmployees.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-xs font-semibold text-slate-400 dark:text-slate-500">
+                  <td colSpan={8} className="px-6 py-12 text-center text-xs font-semibold text-slate-400 dark:text-slate-500">
                     No active employees found in this directory.
                   </td>
                 </tr>
@@ -954,6 +1008,13 @@ export default function Employees() {
                           : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
                       }`}>
                         {emp.status}
+                      </span>
+                    </td>
+
+                    {/* Assigned HR */}
+                    <td className="px-6 py-4">
+                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                        {emp.assigned_hr_name || 'Unassigned'}
                       </span>
                     </td>
 
@@ -1252,6 +1313,24 @@ export default function Employees() {
                 </select>
               </div>
 
+              {user?.role === 'ADMIN' && (
+                <div className="col-span-2">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Assigned HR *</label>
+                  <select
+                    required
+                    value={formAssignedHR}
+                    onChange={(e) => setFormAssignedHR(e.target.value)}
+                    className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-2 text-xs text-slate-800 focus:border-blue-600 focus:outline-none"
+                    disabled={actionLoading}
+                  >
+                    <option value="">Select HR Representative</option>
+                    {hrStaff.map(hr => (
+                      <option key={hr.id} value={hr.id}>{hr.full_name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="col-span-2 pt-4 flex space-x-2.5">
                 <button
                   type="button"
@@ -1448,6 +1527,24 @@ export default function Employees() {
                   <option value="REMOTE">REMOTE</option>
                 </select>
               </div>
+
+              {user?.role === 'ADMIN' && (
+                <div className="col-span-2">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Assigned HR *</label>
+                  <select
+                    required
+                    value={formAssignedHR}
+                    onChange={(e) => setFormAssignedHR(e.target.value)}
+                    className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-2 text-xs text-slate-800 focus:border-blue-600 focus:outline-none"
+                    disabled={actionLoading}
+                  >
+                    <option value="">Select HR Representative</option>
+                    {hrStaff.map(hr => (
+                      <option key={hr.id} value={hr.id}>{hr.full_name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="col-span-2 pt-4 flex space-x-2.5">
                 <button

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useHR } from '../../context/HRContext';
 import { documentService } from '../../services/documentService';
 import { 
@@ -8,8 +8,6 @@ import {
   Trash2, 
   Search, 
   Filter, 
-  FileCheck, 
-  AlertTriangle, 
   CheckCircle, 
   Clock, 
   Plus, 
@@ -20,10 +18,16 @@ import {
   Calendar,
   Layers,
   Activity,
-  ChevronRight,
   Shield,
   FileMinus,
-  Edit2
+  Edit2,
+  Eye,
+  HardDrive,
+  Files,
+  Check,
+  AlertTriangle,
+  RefreshCw,
+  FileSpreadsheet
 } from 'lucide-react';
 
 interface Category {
@@ -43,7 +47,7 @@ interface ActivityLog {
 }
 
 export default function Documents() {
-  const { employees, refreshData, user } = useHR();
+  const { employees, user } = useHR();
   
   // Checking permissions
   const isHR = user?.role === 'HR' || user?.role === 'ADMIN';
@@ -59,6 +63,7 @@ export default function Documents() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('All');
+  const [selectedStatus, setSelectedStatus] = useState<string>('All');
   const [uploadDateFilter, setUploadDateFilter] = useState<string>('');
   
   // Tab states
@@ -66,7 +71,9 @@ export default function Documents() {
 
   // Modal / Form states
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showReplaceModal, setShowReplaceModal] = useState<any | null>(null);
   const [showEditModal, setShowEditModal] = useState<any | null>(null);
+  const [previewDocument, setPreviewDocument] = useState<any | null>(null);
   
   // Upload form input states
   const [docTitle, setDocTitle] = useState('');
@@ -74,11 +81,20 @@ export default function Documents() {
   const [docEmployeeId, setDocEmployeeId] = useState<string>('');
   const [docDescription, setDocDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   
   // Upload status states
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' });
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  // Drag & drop state
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load backend data
   const loadDocumentsData = async () => {
@@ -112,22 +128,43 @@ export default function Documents() {
 
   // Statistics calculation
   const totalDocs = documents.length;
-  // Map backend status to counts
-  const activeDocs = documents.filter(d => d.status === 'Active').length;
-  const archivedDocs = documents.filter(d => d.status === 'Expired').length; // Maps Archived to expired UI count
-  const deletedDocs = documents.filter(d => d.status === 'Missing').length; // Maps deleted to Missing UI count
+  const pendingDocsCount = documents.filter(d => d.status === 'Pending Verification').length;
+  const employeeDocsCount = documents.filter(d => d.employeeId || d.ownerName !== 'Admin' && d.ownerName !== 'System').length;
+  
+  // Recent uploads in last 7 days
+  const recentDocsCount = documents.filter(d => {
+    try {
+      const uploadDate = new Date(d.uploadDate);
+      const diffTime = Math.abs(new Date().getTime() - uploadDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays <= 7;
+    } catch {
+      return false;
+    }
+  }).length;
+
+  // Total Storage Size in MB
+  const totalStorageBytes = documents.reduce((sum, d) => sum + (d.fileSize || 0), 0);
+  const totalStorageMB = (totalStorageBytes / (1024 * 1024)).toFixed(2);
+
+  // Format Helper for File Size
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return '0 Bytes';
+    const k = 1024;
+    const dm = 2;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  };
 
   // Filter logic
   const filteredDocs = documents.filter(doc => {
     const titleMatch = doc.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // In our context: Category is string name. We filter by string matching.
     const categoryMatch = selectedCategory === 'All' || doc.category.toLowerCase() === selectedCategory.toLowerCase();
+    const statusMatch = selectedStatus === 'All' || doc.status === selectedStatus;
     
-    // HR only employee filtering
     let employeeMatch = true;
     if (isHR && selectedEmployeeId !== 'All') {
-      // Find employee's name to match ownerName since frontend mapping returns employee name / uploaded username
       const emp = employees.find(e => e.id === selectedEmployeeId);
       if (emp) {
         employeeMatch = doc.ownerName.toLowerCase().includes(emp.name.toLowerCase());
@@ -136,19 +173,90 @@ export default function Documents() {
       }
     }
 
-    // Upload date filter (format YYYY-MM-DD)
     let dateMatch = true;
     if (uploadDateFilter) {
-      // Map frontend formatted date back or search upload date
-      // doc.uploadDate is formatted as "Month Year" or iso string.
-      // We check if it is part of it or parse. If format is short, we match year/month.
-      // For precision, we'll try to check string matching or simple inclusion.
-      const formattedFilterDate = new Date(uploadDateFilter).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      const formattedFilterDate = new Date(uploadDateFilter).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
       dateMatch = doc.uploadDate.includes(formattedFilterDate) || doc.uploadDate.includes(uploadDateFilter);
     }
 
-    return titleMatch && categoryMatch && employeeMatch && dateMatch;
+    return titleMatch && categoryMatch && employeeMatch && dateMatch && statusMatch;
   });
+
+  // Paginated docs
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentDocs = filteredDocs.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredDocs.length / itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Drag & drop handlers
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      validateAndSetFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      validateAndSetFile(e.target.files[0]);
+    }
+  };
+
+  const validateAndSetFile = (file: File) => {
+    setUploadStatus({ type: null, message: '' });
+
+    // Validate type (PDF, DOC, DOCX, JPG, PNG)
+    const allowedExtensions = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
+    const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+    if (!allowedExtensions.includes(fileExtension)) {
+      setUploadStatus({ 
+        type: 'error', 
+        message: 'Unsupported file format. Please upload PDF, DOC, DOCX, JPG, or PNG files only.' 
+      });
+      return;
+    }
+
+    // Validate size (10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      setUploadStatus({ 
+        type: 'error', 
+        message: 'File is too large. Maximum allowed size is 10MB.' 
+      });
+      return;
+    }
+
+    setSelectedFile(file);
+    setDocTitle(file.name.substring(0, file.name.lastIndexOf('.')) || file.name);
+
+    // Create preview URL if it is an image
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreviewUrl(null);
+    }
+  };
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,27 +268,6 @@ export default function Documents() {
     }
     if (!selectedFile) {
       setUploadStatus({ type: 'error', message: 'Please select a file to upload.' });
-      return;
-    }
-
-    // Validate type (PDF, DOC, DOCX, JPG, PNG)
-    const allowedExtensions = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
-    const fileExtension = selectedFile.name.split('.').pop()?.toLowerCase() || '';
-    if (!allowedExtensions.includes(fileExtension)) {
-      setUploadStatus({ 
-        type: 'error', 
-        message: 'Unsupported file format. Please upload PDF, DOC, DOCX, JPG, or PNG files only.' 
-      });
-      return;
-    }
-
-    // Validate size (10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (selectedFile.size > maxSize) {
-      setUploadStatus({ 
-        type: 'error', 
-        message: 'File is too large. Maximum allowed size is 10MB.' 
-      });
       return;
     }
 
@@ -200,10 +287,11 @@ export default function Documents() {
       );
 
       if (uploaded) {
-        setUploadStatus({ type: 'success', message: 'Document uploaded successfully!' });
+        setUploadStatus({ type: 'success', message: 'Document uploaded successfully and queued for verification!' });
         setDocTitle('');
         setDocDescription('');
         setSelectedFile(null);
+        setFilePreviewUrl(null);
         setTimeout(() => {
           setShowUploadModal(false);
           setUploadStatus({ type: null, message: '' });
@@ -219,13 +307,47 @@ export default function Documents() {
     }
   };
 
+  const handleReplaceSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!showReplaceModal || !selectedFile) return;
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const replaced = await documentService.replaceDocument(
+        showReplaceModal.id,
+        selectedFile,
+        showReplaceModal.name,
+        showReplaceModal.category_id || categories[0]?.id,
+        showReplaceModal.description || '',
+        (progress) => {
+          setUploadProgress(progress);
+        }
+      );
+
+      if (replaced) {
+        setUploadStatus({ type: 'success', message: 'Document replaced successfully!' });
+        setSelectedFile(null);
+        setTimeout(() => {
+          setShowReplaceModal(null);
+          setUploadStatus({ type: null, message: '' });
+          loadDocumentsData();
+        }, 1200);
+      }
+    } catch (err: any) {
+      setUploadStatus({ type: 'error', message: 'Replacement failed.' });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleUpdateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!showEditModal) return;
 
     try {
-      // Find category ID by name or match
-      const matchedCat = categories.find(c => c.id === Number(showEditModal.category_id)) || categories[0];
+      const matchedCat = categories.find(c => c.name === showEditModal.category) || categories[0];
       const updated = await documentService.updateDocument(
         showEditModal.id,
         showEditModal.name,
@@ -239,6 +361,28 @@ export default function Documents() {
       }
     } catch (err) {
       console.error('Failed to update document', err);
+    }
+  };
+
+  const handleApprove = async (id: string) => {
+    try {
+      const res = await documentService.approveDocument(id);
+      if (res) {
+        loadDocumentsData();
+      }
+    } catch (err) {
+      console.error('Failed to approve document:', err);
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    try {
+      const res = await documentService.rejectDocument(id);
+      if (res) {
+        loadDocumentsData();
+      }
+    } catch (err) {
+      console.error('Failed to reject document:', err);
     }
   };
 
@@ -289,64 +433,64 @@ export default function Documents() {
     <div className="space-y-6">
       
       {/* Header bar */}
-      <div className="flex flex-col justify-between space-y-3 sm:flex-row sm:items-center sm:space-y-0">
+      <div className="flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
         <div>
-          <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-2xl flex items-center space-x-2">
-            <Shield className="h-6 w-6 text-blue-600" />
-            <span>Secure Document Vault</span>
+          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center space-x-2.5">
+            <Shield className="h-7 w-7 text-indigo-600 dark:text-indigo-400" />
+            <span>Enterprise Documents Vault</span>
           </h1>
-          <p className="text-xs font-semibold text-slate-400 dark:text-slate-500">
+          <p className="text-sm font-semibold text-slate-600 dark:text-slate-350 mt-1">
             {isHR 
-              ? 'Store, manage, and audit employee credentials and company agreements' 
-              : 'Access, download, and review your personal employment documents'}
+              ? 'Oversee employee certifications, verify uploads, and audit repository activities.' 
+              : 'Securely manage, verify, and replace your official employment files.'}
           </p>
         </div>
 
-        <div className="flex items-center space-x-2.5">
+        <div className="flex items-center space-x-3">
           {isHR && (
-            <div className="flex rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+            <div className="flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
               <button
                 onClick={() => setActiveTab('vault')}
-                className={`rounded-md px-3 py-1.5 text-xs font-bold transition ${
+                className={`rounded-md px-4 py-1.5 text-xs font-bold transition-all duration-200 ${
                   activeTab === 'vault'
                     ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white'
-                    : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                 }`}
               >
                 Vault
               </button>
               <button
                 onClick={() => setActiveTab('logs')}
-                className={`rounded-md px-3 py-1.5 text-xs font-bold transition ${
+                className={`rounded-md px-4 py-1.5 text-xs font-bold transition-all duration-200 ${
                   activeTab === 'logs'
                     ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white'
-                    : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                 }`}
               >
-                Activity Logs
+                Activity Audit Trail
               </button>
             </div>
           )}
 
-          {isHR && (
-            <button
-              onClick={() => {
-                setUploadStatus({ type: null, message: '' });
-                setShowUploadModal(true);
-              }}
-              className="inline-flex h-9 items-center space-x-1.5 rounded-lg bg-blue-600 px-4 text-xs font-extrabold text-white hover:bg-blue-700 shadow-sm transition"
-            >
-              <Upload className="h-3.5 w-3.5" />
-              <span>Upload Document</span>
-            </button>
-          )}
+          <button
+            onClick={() => {
+              setUploadStatus({ type: null, message: '' });
+              setSelectedFile(null);
+              setFilePreviewUrl(null);
+              setShowUploadModal(true);
+            }}
+            className="inline-flex h-10 items-center space-x-2 rounded-lg bg-indigo-600 px-5 text-sm font-extrabold text-white hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all duration-200"
+          >
+            <Upload className="h-4 w-4" />
+            <span>Upload Document</span>
+          </button>
         </div>
       </div>
 
       {errorMsg && (
-        <div className="rounded-lg bg-rose-50 border border-rose-200 p-4 text-xs font-bold text-rose-700 dark:bg-rose-950/20 dark:border-rose-900">
-          <div className="flex items-center space-x-2">
-            <AlertTriangle className="h-4 w-4" />
+        <div className="rounded-xl bg-rose-50 border border-rose-200 p-4 text-sm font-bold text-rose-800 dark:bg-rose-950/20 dark:border-rose-900/60 dark:text-rose-300">
+          <div className="flex items-center space-x-2.5">
+            <AlertTriangle className="h-5 w-5 text-rose-600" />
             <span>{errorMsg}</span>
           </div>
         </div>
@@ -354,216 +498,312 @@ export default function Documents() {
 
       {activeTab === 'vault' ? (
         <>
-          {/* Vault Summary Cards */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Dashboard Statistics Grid */}
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
             
-            <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Vault Packages</span>
-              <span className="text-2xl font-black text-slate-950 dark:text-white mt-1 block">
-                {loading ? '...' : totalDocs}
-              </span>
-            </div>
-
-            <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 flex items-center justify-between">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between hover:shadow-md transition">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Active Packages</span>
-                <span className="text-2xl font-black text-emerald-500 mt-1 block">
-                  {loading ? '...' : activeDocs}
+                <span className="text-xs font-extrabold text-slate-500 dark:text-slate-350 uppercase tracking-wider block">Total Vault Files</span>
+                <span className="text-3xl font-black text-slate-900 dark:text-white mt-2 block">
+                  {loading ? '...' : totalDocs}
                 </span>
               </div>
-              <div className="rounded-lg bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
-                <CheckCircle className="h-4 w-4" />
+              <div className="flex items-center mt-3 text-xs text-slate-450 dark:text-slate-400">
+                <Files className="h-4.5 w-4.5 text-indigo-500 mr-1.5" />
+                <span>Overall storage assets</span>
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 flex items-center justify-between">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between hover:shadow-md transition">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Archived / Expired</span>
-                <span className="text-2xl font-black text-amber-500 mt-1 block">
-                  {loading ? '...' : archivedDocs}
+                <span className="text-xs font-extrabold text-slate-500 dark:text-slate-350 uppercase tracking-wider block">Employee Dossiers</span>
+                <span className="text-3xl font-black text-blue-600 dark:text-blue-400 mt-2 block">
+                  {loading ? '...' : employeeDocsCount}
                 </span>
               </div>
-              <div className="rounded-lg bg-amber-50 p-2 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
-                <Clock className="h-4 w-4" />
+              <div className="flex items-center mt-3 text-xs text-slate-450 dark:text-slate-400">
+                <User className="h-4.5 w-4.5 text-blue-500 mr-1.5" />
+                <span>Linked to profiles</span>
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 flex items-center justify-between">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between hover:shadow-md transition">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Deleted / Missing</span>
-                <span className="text-2xl font-black text-rose-500 mt-1 block">
-                  {loading ? '...' : deletedDocs}
+                <span className="text-xs font-extrabold text-slate-500 dark:text-slate-350 uppercase tracking-wider block">Pending Verification</span>
+                <span className="text-3xl font-black text-amber-605 dark:text-amber-400 mt-2 block">
+                  {loading ? '...' : pendingDocsCount}
                 </span>
               </div>
-              <div className="rounded-lg bg-rose-50 p-2 text-rose-600 dark:bg-rose-950/40" style={{ color: '#ef4444' }}>
-                <AlertTriangle className="h-4 w-4" />
+              <div className="flex items-center mt-3 text-xs text-slate-450 dark:text-slate-400">
+                <Clock className="h-4.5 w-4.5 text-amber-500 mr-1.5" />
+                <span>Requires HR review</span>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between hover:shadow-md transition">
+              <div>
+                <span className="text-xs font-extrabold text-slate-500 dark:text-slate-350 uppercase tracking-wider block">Recent Uploads (7d)</span>
+                <span className="text-3xl font-black text-emerald-650 dark:text-emerald-400 mt-2 block">
+                  {loading ? '...' : recentDocsCount}
+                </span>
+              </div>
+              <div className="flex items-center mt-3 text-xs text-slate-450 dark:text-slate-400">
+                <Activity className="h-4.5 w-4.5 text-emerald-500 mr-1.5" />
+                <span>New files uploaded</span>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between hover:shadow-md transition">
+              <div>
+                <span className="text-xs font-extrabold text-slate-500 dark:text-slate-350 uppercase tracking-wider block">Storage Utilization</span>
+                <span className="text-3xl font-black text-purple-600 dark:text-purple-400 mt-2 block">
+                  {loading ? '...' : `${totalStorageMB} MB`}
+                </span>
+              </div>
+              <div className="flex items-center mt-3 text-xs text-slate-450 dark:text-slate-400">
+                <HardDrive className="h-4.5 w-4.5 text-purple-500 mr-1.5" />
+                <span>Disk space consumed</span>
               </div>
             </div>
 
           </div>
 
-          {/* Search & Filtering Controls */}
-          <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-100 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-            <div className="grid gap-3 md:grid-cols-4">
+          {/* Search, Status, and Category Filters */}
+          <div className="bg-white p-5 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900 shadow-sm space-y-4">
+            <div className="grid gap-4 md:grid-cols-5">
               
               {/* Search */}
               <div className="relative">
-                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-550 dark:text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Search by title..."
+                  placeholder="Search file name..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="h-10 w-full rounded-md border border-slate-250 bg-slate-50 pl-10 pr-4 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                  className="h-11 w-full rounded-lg border border-slate-300 bg-slate-50 pl-10 pr-4 text-xs font-extrabold text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:bg-slate-950 transition-colors"
                 />
               </div>
 
               {/* Category selector */}
               <div className="relative">
-                <Layers className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Layers className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-550 dark:text-slate-400" />
                 <select
                   value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="h-10 w-full rounded-md border border-slate-250 bg-slate-50 pl-10 pr-4 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
+                  className="h-11 w-full rounded-lg border border-slate-300 bg-slate-50 pl-10 pr-4 text-xs font-extrabold text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:bg-slate-950 transition-colors"
                 >
-                  <option value="All">All Categories</option>
+                  <option value="All" className="dark:bg-slate-900 font-extrabold text-slate-900 dark:text-white">All Categories</option>
                   {categories.map(cat => (
-                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                    <option key={cat.id} value={cat.name} className="dark:bg-slate-900 font-semibold text-slate-900 dark:text-white">{cat.name}</option>
                   ))}
+                </select>
+              </div>
+
+              {/* Status selector */}
+              <div className="relative">
+                <Filter className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-550 dark:text-slate-400" />
+                <select
+                  value={selectedStatus}
+                  onChange={(e) => { setSelectedStatus(e.target.value); setCurrentPage(1); }}
+                  className="h-11 w-full rounded-lg border border-slate-300 bg-slate-50 pl-10 pr-4 text-xs font-extrabold text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:bg-slate-950 transition-colors"
+                >
+                  <option value="All" className="dark:bg-slate-900 font-extrabold text-slate-900 dark:text-white">All Statuses</option>
+                  <option value="Active" className="dark:bg-slate-900 font-semibold text-slate-900 dark:text-white">Active</option>
+                  <option value="Pending Verification" className="dark:bg-slate-900 font-semibold text-slate-900 dark:text-white">Pending Verification</option>
+                  <option value="Approved" className="dark:bg-slate-900 font-semibold text-slate-900 dark:text-white">Approved</option>
+                  <option value="Rejected" className="dark:bg-slate-900 font-semibold text-slate-900 dark:text-white">Rejected</option>
+                  <option value="Expired" className="dark:bg-slate-900 font-semibold text-slate-900 dark:text-white">Archived</option>
                 </select>
               </div>
 
               {/* Employee selector (HR only) */}
               <div className="relative">
-                <User className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <User className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-550 dark:text-slate-400" />
                 <select
                   disabled={!isHR}
                   value={selectedEmployeeId}
-                  onChange={(e) => setSelectedEmployeeId(e.target.value)}
-                  className="h-10 w-full rounded-md border border-slate-250 bg-slate-50 pl-10 pr-4 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 disabled:opacity-50"
+                  onChange={(e) => { setSelectedEmployeeId(e.target.value); setCurrentPage(1); }}
+                  className="h-11 w-full rounded-lg border border-slate-300 bg-slate-50 pl-10 pr-4 text-xs font-extrabold text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:bg-slate-950 transition-colors disabled:opacity-50"
                 >
-                  <option value="All">All Employees</option>
+                  <option value="All" className="dark:bg-slate-900 font-extrabold text-slate-900 dark:text-white">All Employees</option>
                   {employees.map(emp => (
-                    <option key={emp.id} value={emp.id}>{emp.name}</option>
+                    <option key={emp.id} value={emp.id} className="dark:bg-slate-900 font-semibold text-slate-900 dark:text-white">{emp.name}</option>
                   ))}
                 </select>
               </div>
 
               {/* Upload date filter */}
               <div className="relative">
-                <Calendar className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Calendar className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-550 dark:text-slate-400" />
                 <input
                   type="date"
                   value={uploadDateFilter}
-                  onChange={(e) => setUploadDateFilter(e.target.value)}
-                  className="h-10 w-full rounded-md border border-slate-250 bg-slate-50 pl-10 pr-4 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  onChange={(e) => { setUploadDateFilter(e.target.value); setCurrentPage(1); }}
+                  className="h-11 w-full rounded-lg border border-slate-300 bg-slate-50 pl-10 pr-4 text-xs font-extrabold text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:bg-slate-950 transition-colors"
                 />
               </div>
 
             </div>
           </div>
 
-          {/* Main Table Ledger */}
-          <div className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          {/* Main Table Layout */}
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 transition-all duration-200">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:border-slate-800 dark:bg-slate-800/40">
-                    <th className="px-6 py-4">Document Title</th>
-                    <th className="px-6 py-4">Category</th>
-                    <th className="px-6 py-4">Uploaded By / Employee</th>
-                    <th className="px-6 py-4">Upload Date</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-xs font-black uppercase tracking-wider text-slate-700 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-200">
+                    <th className="px-6 py-4.5">Document Title / Info</th>
+                    <th className="px-6 py-4.5">Category</th>
+                    <th className="px-6 py-4.5">Uploaded By / Employee</th>
+                    <th className="px-6 py-4.5">File Details</th>
+                    <th className="px-6 py-4.5">Status</th>
+                    <th className="px-6 py-4.5 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-700 dark:divide-slate-800/40 dark:text-slate-350">
+                <tbody className="divide-y divide-slate-200 text-xs font-extrabold text-slate-800 dark:divide-slate-800/60 dark:text-slate-300">
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-semibold">
-                        <div className="flex flex-col items-center justify-center space-y-2">
-                          <Activity className="h-6 w-6 animate-spin text-blue-600" />
-                          <span>Loading vault database...</span>
+                      <td colSpan={6} className="px-6 py-16 text-center text-slate-500 font-bold dark:text-slate-400">
+                        <div className="flex flex-col items-center justify-center space-y-3">
+                           <Activity className="h-7 w-7 animate-spin text-indigo-600" />
+                          <span className="text-slate-900 dark:text-white">Retrieving secure documents vault database...</span>
                         </div>
                       </td>
                     </tr>
-                  ) : filteredDocs.length > 0 ? (
-                    filteredDocs.map((doc) => (
-                      <tr key={doc.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/10 transition">
+                  ) : currentDocs.length > 0 ? (
+                    currentDocs.map((doc) => (
+                      <tr key={doc.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-all duration-150">
                         
                         <td className="px-6 py-4">
-                          <div className="flex items-center space-x-3">
-                            <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                          <div className="flex items-center space-x-3.5">
+                            <div className="rounded-lg bg-indigo-50 dark:bg-indigo-950/60 p-2.5 flex-shrink-0 border border-indigo-100 dark:border-indigo-900/50">
+                              <FileText className="h-5.5 w-5.5 text-indigo-600 dark:text-indigo-400" />
+                            </div>
                             <div>
-                              <span className="text-slate-900 dark:text-white font-extrabold tracking-tight">{doc.name}</span>
+                              <span className="text-slate-950 dark:text-white font-bold text-sm tracking-tight hover:text-indigo-650 cursor-pointer" onClick={() => setPreviewDocument(doc)}>{doc.name}</span>
                               {doc.description && (
-                                <p className="text-[10px] text-slate-400 font-medium font-semibold">{doc.description}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5 max-w-sm line-clamp-1">{doc.description}</p>
                               )}
                             </div>
                           </div>
                         </td>
 
                         <td className="px-6 py-4">
-                          <span className="rounded bg-slate-100 px-2 py-1 text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                          <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                             {doc.category}
                           </span>
                         </td>
 
                         <td className="px-6 py-4">
-                          <div className="flex items-center space-x-2">
-                            <div className="h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-900/60 flex items-center justify-center text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase">
+                          <div className="flex items-center space-x-2.5">
+                            <div className="h-7 w-7 rounded-full bg-indigo-100 dark:bg-indigo-900/70 flex items-center justify-center text-xs font-black text-indigo-750 dark:text-indigo-305 uppercase border border-indigo-200 dark:border-indigo-805">
                               {doc.ownerName ? doc.ownerName[0] : 'U'}
                             </div>
-                            <span className="font-semibold text-slate-650 dark:text-slate-350">{doc.ownerName}</span>
+                            <span className="font-extrabold text-slate-900 dark:text-slate-200">{doc.ownerName}</span>
                           </div>
                         </td>
 
-                        <td className="px-6 py-4 text-slate-400 font-mono font-semibold">{doc.uploadDate}</td>
+                        <td className="px-6 py-4 text-slate-600 dark:text-slate-350">
+                          <div className="font-semibold space-y-0.5">
+                            <div className="font-mono text-xs">{doc.uploadDate}</div>
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center">
+                              <span>{formatFileSize(doc.fileSize)}</span>
+                              {doc.fileType && (
+                                <span className="uppercase ml-2 bg-slate-205 dark:bg-slate-800 px-1 rounded text-[9px] border border-slate-300 dark:border-slate-700">{doc.fileType}</span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
 
                         <td className="px-6 py-4">
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${
-                            doc.status === 'Active'
-                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400'
-                              : doc.status === 'Expired'
-                              ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400'
-                              : 'bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-450'
+                          <span className={`inline-flex rounded-lg px-3 py-1 text-xs font-extrabold tracking-wide border ${
+                            doc.status === 'Active' || doc.status === 'Approved'
+                              ? 'bg-emerald-100 text-emerald-950 border-emerald-305 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-900/60'
+                              : doc.status === 'Pending Verification'
+                              ? 'bg-amber-100 text-amber-950 border-amber-305 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-900/60'
+                              : doc.status === 'Rejected'
+                              ? 'bg-rose-100 text-rose-950 border-rose-305 dark:bg-rose-950/70 dark:text-rose-300 dark:border-rose-900/60'
+                              : 'bg-slate-100 text-slate-950 border-slate-300 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700'
                           }`}>
-                            {doc.status === 'Expired' ? 'Archived' : doc.status}
+                            {doc.status}
                           </span>
                         </td>
 
-                        <td className="px-6 py-4 text-right space-x-1">
+                        <td className="px-6 py-4 text-right space-x-1.5">
+                          <button
+                            onClick={() => setPreviewDocument(doc)}
+                            className="p-2 rounded-lg bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 text-slate-600 hover:text-indigo-650 dark:bg-slate-800 dark:hover:bg-indigo-950/40 dark:border-slate-700 dark:hover:border-indigo-900 transition-colors"
+                            title="Preview Document"
+                          >
+                            <Eye className="h-4.5 w-4.5" />
+                          </button>
+
                           <button
                             onClick={() => handleDownload(doc.id, doc.name)}
-                            className="p-1.5 rounded hover:bg-blue-50 text-slate-400 hover:text-blue-600 dark:hover:bg-blue-950/30 transition"
+                            className="p-2 rounded-lg bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-slate-600 hover:text-blue-650 dark:bg-slate-800 dark:hover:bg-blue-950/40 dark:border-slate-700 dark:hover:border-blue-900 transition-colors"
                             title="Download Document"
                           >
                             <Download className="h-4.5 w-4.5" />
                           </button>
                           
-                          {isHR && (
+                          {/* HR Verification Controls */}
+                          {isHR && doc.status === 'Pending Verification' && (
+                            <>
+                              <button
+                                onClick={() => handleApprove(doc.id)}
+                                className="p-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-250 hover:border-emerald-400 text-emerald-800 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/80 dark:border-emerald-900 dark:hover:border-emerald-800 transition-colors"
+                                title="Approve Document"
+                              >
+                                <Check className="h-4.5 w-4.5" />
+                              </button>
+                              <button
+                                onClick={() => handleReject(doc.id)}
+                                className="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-250 hover:border-rose-400 text-rose-800 dark:bg-rose-950/40 dark:hover:bg-rose-950/80 dark:border-rose-900 dark:hover:border-rose-800 transition-colors"
+                                title="Reject Document"
+                              >
+                                <X className="h-4.5 w-4.5" />
+                              </button>
+                            </>
+                          )}
+
+                          {/* Employee Actions / HR Actions */}
+                          {(!isHR || doc.ownerName === user?.username || doc.employeeId === user?.employee_profile?.id) && (
+                            <button
+                              onClick={() => {
+                                setUploadStatus({ type: null, message: '' });
+                                setSelectedFile(null);
+                                setShowReplaceModal(doc);
+                              }}
+                              className="p-2 rounded-lg bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 text-slate-600 hover:text-amber-650 dark:bg-slate-800 dark:hover:bg-amber-950/40 dark:border-slate-700 dark:hover:border-amber-900 transition-colors"
+                              title="Replace File"
+                            >
+                              <RefreshCw className="h-4.5 w-4.5" />
+                            </button>
+                          )}
+
+                          {isHR ? (
                             <>
                               <button
                                 onClick={() => setShowEditModal(doc)}
-                                className="p-1.5 rounded hover:bg-slate-50 text-slate-400 hover:text-slate-600 dark:hover:bg-slate-800 transition"
-                                title="Edit Document"
+                                className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-705 transition-colors"
+                                title="Edit Info"
                               >
                                 <Edit2 className="h-4 w-4" />
                               </button>
 
-                              {doc.status === 'Active' ? (
+                              {doc.status !== 'Expired' ? (
                                 <button
                                   onClick={() => handleArchive(doc.id)}
-                                  className="p-1.5 rounded hover:bg-amber-50 text-slate-400 hover:text-amber-600 dark:hover:bg-amber-950/30 transition"
-                                  title="Archive Document"
+                                  className="p-2 rounded-lg bg-slate-50 hover:bg-amber-55 border border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 hover:text-amber-600 transition-colors"
+                                  title="Archive File"
                                 >
                                   <Archive className="h-4.5 w-4.5" />
                                 </button>
                               ) : (
                                 <button
                                   onClick={() => handleRestore(doc.id)}
-                                  className="p-1.5 rounded hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 dark:hover:bg-emerald-950/30 transition"
-                                  title="Restore Document"
+                                  className="p-2 rounded-lg bg-slate-50 hover:bg-emerald-55 border border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 hover:text-emerald-600 transition-colors"
+                                  title="Restore File"
                                 >
                                   <RotateCcw className="h-4.5 w-4.5" />
                                 </button>
@@ -571,12 +811,23 @@ export default function Documents() {
                               
                               <button
                                 onClick={() => handleDelete(doc.id)}
-                                className="p-1.5 rounded hover:bg-rose-50 text-slate-405 hover:text-rose-600 dark:hover:bg-rose-950/30 transition"
-                                title="Delete Document"
+                                className="p-2 rounded-lg bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-305 text-rose-500 hover:text-rose-700 dark:bg-slate-800 dark:hover:bg-rose-950/40 dark:border-slate-700 dark:hover:border-rose-900 transition-colors"
+                                title="Delete File"
                               >
                                 <Trash2 className="h-4.5 w-4.5" />
                               </button>
                             </>
+                          ) : (
+                            // Employee delete action for their own files
+                            (doc.ownerName === user?.username || doc.employeeId === user?.employee_profile?.id) && (
+                              <button
+                                onClick={() => handleDelete(doc.id)}
+                                className="p-2 rounded-lg bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-305 text-rose-500 hover:text-rose-700 dark:bg-slate-800 dark:hover:bg-rose-950/40 dark:border-slate-700 dark:hover:border-rose-900 transition-colors"
+                                title="Delete Document"
+                              >
+                                <Trash2 className="h-4.5 w-4.5" />
+                              </button>
+                            )
                           )}
                         </td>
 
@@ -584,10 +835,11 @@ export default function Documents() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-slate-450 font-semibold">
-                        <div className="flex flex-col items-center justify-center space-y-2">
-                          <FileMinus className="h-10 w-10 text-slate-300 dark:text-slate-700" />
-                          <span>No documents match the current search filters.</span>
+                      <td colSpan={6} className="px-6 py-20 text-center text-slate-500 dark:text-slate-400 font-bold">
+                        <div className="flex flex-col items-center justify-center space-y-3">
+                           <FileMinus className="h-12 w-12 text-slate-300 dark:text-slate-705" />
+                          <span className="text-slate-900 dark:text-white text-sm">No vault documents found matching the active query criteria.</span>
+                          <p className="text-xs text-slate-450 dark:text-slate-400 font-semibold">Try modifying filters or upload a new file.</p>
                         </div>
                       </td>
                     </tr>
@@ -595,58 +847,102 @@ export default function Documents() {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 px-6 py-4.5 bg-slate-50/50 dark:bg-slate-800/10">
+                <div className="text-xs font-semibold text-slate-550 dark:text-slate-400">
+                  Showing <span className="font-extrabold text-slate-850 dark:text-slate-200">{indexOfFirstItem + 1}</span> to <span className="font-extrabold text-slate-850 dark:text-slate-200">{Math.min(indexOfLastItem, filteredDocs.length)}</span> of <span className="font-extrabold text-slate-850 dark:text-slate-200">{filteredDocs.length}</span> vault records
+                </div>
+                <div className="flex space-x-1.5">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className="px-3.5 py-1.5 rounded-lg border border-slate-250 bg-white text-xs font-extrabold text-slate-800 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
+                  >
+                    Previous
+                  </button>
+                  {Array.from({ length: totalPages }).map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handlePageChange(index + 1)}
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
+                        currentPage === index + 1
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'border border-slate-250 bg-white text-slate-800 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className="px-3.5 py-1.5 rounded-lg border border-slate-250 bg-white text-xs font-extrabold text-slate-800 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 disabled:opacity-40 transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </>
       ) : (
         /* Activity Logs View */
-        <div className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-            <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center space-x-1.5">
-              <Activity className="h-4 w-4 text-blue-600" />
-              <span>HR Audit Activity Trail</span>
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 transition-all duration-200">
+          <div className="p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-805/30">
+            <h3 className="text-sm font-extrabold uppercase tracking-widest text-slate-900 dark:text-white flex items-center space-x-2">
+              <Activity className="h-5 w-5 text-indigo-600" />
+              <span>HR Audit Activity Trail Ledger</span>
             </h3>
-            <p className="text-[10px] text-slate-400 mt-0.5">Logs of all uploads, updates, archives, restores, and downloads</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold font-sans">Full cryptographic details of all document uploads, audit approvals, downloads, replacements, and deletes.</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:border-slate-800 dark:bg-slate-800/40">
-                  <th className="px-6 py-4">User</th>
-                  <th className="px-6 py-4">Action</th>
+                <tr className="border-b border-slate-200 bg-slate-50 text-xs font-black uppercase tracking-wider text-slate-700 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-200">
+                  <th className="px-6 py-4">Security User</th>
+                  <th className="px-6 py-4">Transaction Code</th>
                   <th className="px-6 py-4">Document Title</th>
                   <th className="px-6 py-4">Timestamp</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-700 dark:divide-slate-800/40 dark:text-slate-350">
+              <tbody className="divide-y divide-slate-200 text-xs font-extrabold text-slate-800 dark:divide-slate-800/60 dark:text-slate-300">
                 {activityLogs.length > 0 ? (
                   activityLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/10 transition">
+                    <tr key={log.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all duration-150">
                       <td className="px-6 py-4">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-extrabold text-slate-900 dark:text-white">{log.username}</span>
+                        <div className="flex items-center space-x-2.5">
+                          <div className="h-6 w-6 rounded-full bg-slate-105 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                            {log.username ? log.username[0] : 'U'}
+                          </div>
+                          <span className="font-extrabold text-slate-950 dark:text-white">{log.username}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex rounded-md px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${
+                        <span className={`inline-flex rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-wide border ${
                           log.action === 'Download' 
-                            ? 'bg-sky-50 text-sky-700 dark:bg-sky-950/20 dark:text-sky-400'
+                            ? 'bg-sky-100 text-sky-950 border-sky-305 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-900/60'
                             : log.action === 'Upload'
-                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400'
-                            : 'bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400'
+                            ? 'bg-emerald-100 text-emerald-950 border-emerald-305 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/60'
+                            : 'bg-amber-100 text-amber-950 border-amber-305 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60'
                         }`}>
                           {log.action}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-semibold">{log.document_title}</td>
-                      <td className="px-6 py-4 text-slate-400 font-mono font-semibold">
+                      <td className="px-6 py-4 text-slate-900 dark:text-slate-200 font-extrabold">{log.document_title}</td>
+                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400 font-mono font-semibold">
                         {new Date(log.timestamp).toLocaleString()}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-slate-405 font-semibold">
-                      No actions logged.
+                    <td colSpan={4} className="px-6 py-16 text-center text-slate-550 dark:text-slate-400 font-bold">
+                      <div className="flex flex-col items-center justify-center space-y-2">
+                        <Activity className="h-8 w-8 text-slate-300" />
+                        <span>No audit records exist in database.</span>
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -658,126 +954,193 @@ export default function Documents() {
 
       {/* UPLOAD DOCUMENT MODAL */}
       {showUploadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-[2px] p-4">
-          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-7 shadow-2xl dark:border-slate-800 dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
             
-            <div className="flex items-center justify-between pb-3 border-b border-slate-105 dark:border-slate-800">
-              <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-widest">Upload Document Dossier</h3>
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="text-base font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center">
+                <Upload className="h-5 w-5 text-indigo-650 mr-2" />
+                <span>Upload New Secure Dossier</span>
+              </h3>
               <button 
                 onClick={() => {
-                  if (!isUploading) setShowUploadModal(false);
+                  if (!isUploading) {
+                    setShowUploadModal(false);
+                    setSelectedFile(null);
+                    setFilePreviewUrl(null);
+                  }
                 }} 
-                className="rounded p-1 hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="rounded-lg p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition"
               >
-                <X className="h-4 w-4 text-slate-400" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
             {uploadStatus.message && (
-              <div className={`mt-3 rounded p-3 text-xs font-bold ${
+              <div className={`mt-4 rounded-xl p-4 text-xs font-bold border flex items-start space-x-2.5 ${
                 uploadStatus.type === 'success' 
-                  ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-400' 
-                  : 'bg-rose-50 text-rose-800 dark:bg-rose-950/20 dark:text-rose-400'
+                  ? 'bg-emerald-50 text-emerald-950 border-emerald-250 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-900/60' 
+                  : 'bg-rose-50 text-rose-955 border-rose-250 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-900/60'
               }`}>
-                {uploadStatus.message}
+                {uploadStatus.type === 'success' ? <CheckCircle className="h-4.5 w-4.5 text-emerald-600 flex-shrink-0" /> : <AlertTriangle className="h-4.5 w-4.5 text-rose-605 flex-shrink-0" />}
+                <span>{uploadStatus.message}</span>
               </div>
             )}
 
             <form onSubmit={handleUploadSubmit} className="mt-4 space-y-4">
+              
+              {/* Drag & Drop Area */}
+              <div 
+                className={`border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200 ${
+                  dragActive 
+                    ? 'border-indigo-600 bg-indigo-50/30 dark:border-indigo-500 dark:bg-indigo-950/20' 
+                    : 'border-slate-300 hover:border-indigo-400 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:border-slate-650'
+                }`}
+                onDragEnter={handleDrag}
+                onDragOver={handleDrag}
+                onDragLeave={handleDrag}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                />
+                
+                {selectedFile ? (
+                  <div className="space-y-3.5">
+                    <div className="flex items-center justify-center space-x-3.5 text-slate-850 dark:text-slate-205">
+                      <FileSpreadsheet className="h-9 w-9 text-emerald-600" />
+                      <div className="text-left">
+                        <p className="text-xs font-black max-w-[250px] truncate">{selectedFile.name}</p>
+                        <p className="text-[10px] text-slate-500 font-semibold">{formatFileSize(selectedFile.size)}</p>
+                      </div>
+                    </div>
+                    {filePreviewUrl && (
+                      <div className="relative mx-auto max-w-[120px] max-h-[120px] rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-950 p-1">
+                        <img src={filePreviewUrl} alt="Preview" className="w-full h-full object-cover rounded" />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedFile(null);
+                            setFilePreviewUrl(null);
+                          }}
+                          className="absolute -top-1 -right-1 p-1 bg-rose-600 rounded-full text-white hover:bg-rose-700 transition"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="mx-auto h-11 w-11 rounded-full bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center text-indigo-650 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50">
+                      <Upload className="h-5 w-5" />
+                    </div>
+                    <p className="text-xs font-extrabold text-slate-900 dark:text-white">Drag & drop your file here, or <span className="text-indigo-600 dark:text-indigo-400 underline cursor-pointer">browse</span></p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-450 font-semibold">Supports PDF, DOC, DOCX, JPG, PNG (Max 10MB)</p>
+                  </div>
+                )}
+              </div>
+
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Document Title *</label>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-350">Document Title *</label>
                 <input
                   required
                   type="text"
                   value={docTitle}
                   onChange={(e) => setDocTitle(e.target.value)}
-                  placeholder="e.g. Non-Disclosure Agreement"
-                  className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-xs text-slate-800 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white"
+                  placeholder="e.g. Identity Card Passport"
+                  className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-800 dark:text-white focus:outline-none focus:border-indigo-600 focus:bg-white dark:focus:bg-slate-950 transition-colors"
                 />
               </div>
 
-              <div className="grid gap-3 grid-cols-2">
+              <div className="grid gap-4 grid-cols-2">
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Category *</label>
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-350">Category *</label>
                   <select
                     value={docCategoryId}
                     onChange={(e) => setDocCategoryId(Number(e.target.value))}
-                    className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-2 text-xs text-slate-800 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-100 focus:outline-none"
+                    className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 bg-slate-50 px-3 text-xs text-slate-950 dark:border-slate-800 dark:bg-slate-800 dark:text-white focus:outline-none focus:border-indigo-600 focus:bg-white dark:focus:bg-slate-950 transition-colors"
                   >
                     {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      <option key={cat.id} value={cat.id} className="dark:bg-slate-900">{cat.name}</option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Link to Employee</label>
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-350">Link to Employee</label>
                   <select
+                    disabled={!isHR}
                     value={docEmployeeId}
                     onChange={(e) => setDocEmployeeId(e.target.value)}
-                    className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-2 text-xs text-slate-800 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-100 focus:outline-none"
+                    className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 bg-slate-50 px-3 text-xs text-slate-950 dark:border-slate-800 dark:bg-slate-800 dark:text-white focus:outline-none focus:border-indigo-600 focus:bg-white dark:focus:bg-slate-950 transition-colors disabled:opacity-50"
                   >
-                    <option value="">General Company Document</option>
-                    {employees.map(emp => (
-                      <option key={emp.id} value={emp.id}>{emp.name}</option>
-                    ))}
+                    {isHR ? (
+                      <>
+                        <option value="" className="dark:bg-slate-900">General Company File</option>
+                        {employees.map(emp => (
+                          <option key={emp.id} value={emp.id} className="dark:bg-slate-900">{emp.name}</option>
+                        ))}
+                      </>
+                    ) : (
+                      <option value={user?.employee_profile?.id || ""} className="dark:bg-slate-900">{user?.username || 'Myself'}</option>
+                    )}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Description</label>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-350">Description</label>
                 <textarea
                   value={docDescription}
                   onChange={(e) => setDocDescription(e.target.value)}
-                  placeholder="Provide document overview..."
+                  placeholder="Summarize document purpose for compliance auditing..."
                   rows={2}
-                  className="mt-1 w-full rounded-md border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-800 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white resize-none"
+                  className="mt-1.5 w-full rounded-lg border border-slate-300 bg-slate-50 p-3 text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-800 dark:text-white focus:outline-none focus:border-indigo-600 focus:bg-white dark:focus:bg-slate-950 transition-colors resize-none"
                 />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">File Attachment *</label>
-                <input
-                  required
-                  type="file"
-                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                  className="mt-1 block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-slate-800 dark:file:text-slate-200"
-                />
-                <p className="text-[9px] text-slate-400 mt-1 font-semibold">Supported formats: PDF, DOC, DOCX, JPG, PNG (Max size: 10MB)</p>
               </div>
 
               {isUploading && (
-                <div className="space-y-1.5 pt-2">
-                  <div className="flex justify-between text-[10px] font-bold text-slate-450">
-                    <span>Uploading file...</span>
+                <div className="space-y-2 pt-2 animate-pulse">
+                  <div className="flex justify-between text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                    <span>Uploading cryptographic asset packet...</span>
                     <span>{uploadProgress}%</span>
                   </div>
-                  <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-2 w-full bg-slate-105 dark:bg-slate-800 rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-blue-600 transition-all duration-300"
+                      className="h-full bg-indigo-600 transition-all duration-300 rounded-full"
                       style={{ width: `${uploadProgress}%` }}
                     />
                   </div>
                 </div>
               )}
 
-              <div className="pt-2 flex space-x-2.5">
+              <div className="pt-3 flex space-x-3.5">
                 <button
                   type="button"
                   disabled={isUploading}
-                  onClick={() => setShowUploadModal(false)}
-                  className="flex-1 border border-slate-200 rounded-lg py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-750 dark:text-slate-350 dark:hover:bg-slate-800 disabled:opacity-50"
+                  onClick={() => {
+                    setShowUploadModal(false);
+                    setSelectedFile(null);
+                    setFilePreviewUrl(null);
+                  }}
+                  className="flex-1 border border-slate-300 rounded-xl py-3 text-xs font-black text-slate-750 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"
                 >
                   Discard
                 </button>
                 <button
                   type="submit"
-                  disabled={isUploading}
-                  className="flex-1 bg-blue-600 text-white rounded-lg py-2.5 text-xs font-extrabold hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center space-x-1"
+                  disabled={isUploading || !selectedFile}
+                  className="flex-1 bg-indigo-600 text-white rounded-xl py-3 text-xs font-black hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all disabled:opacity-40 flex items-center justify-center space-x-2"
                 >
-                  <Upload className="h-3.5 w-3.5" />
-                  <span>{isUploading ? 'Uploading...' : 'Upload File'}</span>
+                  <Upload className="h-4 w-4" />
+                  <span>{isUploading ? 'Uploading...' : 'Verify & Upload'}</span>
                 </button>
               </div>
 
@@ -786,57 +1149,241 @@ export default function Documents() {
         </div>
       )}
 
-      {/* EDIT DOCUMENT MODAL */}
-      {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-[2px] p-4">
-          <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
-            
-            <div className="flex items-center justify-between pb-3 border-b border-slate-105 dark:border-slate-800">
-              <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-widest">Edit Document Title</h3>
-              <button onClick={() => setShowEditModal(null)} className="rounded p-1 hover:bg-slate-100 dark:hover:bg-slate-800">
-                <X className="h-4 w-4 text-slate-400" />
+      {/* REPLACE DOCUMENT MODAL */}
+      {showReplaceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-7 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="text-base font-black text-slate-950 dark:text-white uppercase tracking-wider">Replace Document File</h3>
+              <button onClick={() => setShowReplaceModal(null)} className="rounded-lg p-1.5 hover:bg-slate-105 text-slate-400">
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleUpdateSubmit} className="mt-4 space-y-4">
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Document Title *</label>
+            <form onSubmit={handleReplaceSubmit} className="mt-4 space-y-4">
+              <div 
+                className={`border-2 border-dashed rounded-xl p-5 text-center transition-all ${
+                  dragActive ? 'border-indigo-600 bg-indigo-50/20' : 'border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/40'
+                }`}
+                onDragEnter={handleDrag}
+                onDragOver={handleDrag}
+                onDragLeave={handleDrag}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+              >
                 <input
-                  required
-                  type="text"
-                  value={showEditModal.name}
-                  onChange={(e) => setShowEditModal({ ...showEditModal, name: e.target.value })}
-                  className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-xs text-slate-800 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-100 focus:outline-none"
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                 />
+                
+                {selectedFile ? (
+                  <div className="space-y-2">
+                    <FileSpreadsheet className="h-8 w-8 text-emerald-600 mx-auto" />
+                    <p className="text-xs font-black truncate">{selectedFile.name}</p>
+                    <p className="text-[10px] text-slate-500 font-semibold">{formatFileSize(selectedFile.size)}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Upload className="h-5 w-5 mx-auto text-indigo-500" />
+                    <p className="text-xs font-extrabold text-slate-900 dark:text-white">Click or drag new version to replace</p>
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Description</label>
-                <textarea
-                  value={showEditModal.description || ''}
-                  onChange={(e) => setShowEditModal({ ...showEditModal, description: e.target.value })}
-                  rows={2}
-                  className="mt-1 w-full rounded-md border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-800 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-100 focus:outline-none resize-none"
-                />
-              </div>
+              {isUploading && (
+                <div className="space-y-1.5 pt-2">
+                  <div className="flex justify-between text-xs font-bold text-indigo-600">
+                    <span>Replacing file...</span>
+                    <span>{uploadProgress}%</span>
+                  </div>
+                  <div className="h-2 w-full bg-slate-105 rounded-full overflow-hidden">
+                    <div className="h-full bg-indigo-600" style={{ width: `${uploadProgress}%` }} />
+                  </div>
+                </div>
+              )}
 
-              <div className="pt-2 flex space-x-2.5">
+              <div className="pt-2 flex space-x-3">
                 <button
                   type="button"
-                  onClick={() => setShowEditModal(null)}
-                  className="flex-1 border border-slate-200 rounded-lg py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-750 dark:text-slate-350 dark:hover:bg-slate-800"
+                  disabled={isUploading}
+                  onClick={() => setShowReplaceModal(null)}
+                  className="flex-1 border border-slate-300 rounded-xl py-3 text-xs font-black text-slate-750 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
                 >
                   Discard
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 text-white rounded-lg py-2.5 text-xs font-extrabold hover:bg-blue-700 transition"
+                  disabled={isUploading || !selectedFile}
+                  className="flex-1 bg-indigo-650 hover:bg-indigo-700 text-white rounded-xl py-3 text-xs font-black disabled:opacity-40"
                 >
-                  Save Title
+                  Save New Version
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT DOCUMENT MODAL */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-7 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="text-base font-black text-slate-950 dark:text-white uppercase tracking-wider">Update Document Metadata</h3>
+              <button onClick={() => setShowEditModal(null)} className="rounded-lg p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800">
+                <X className="h-5 w-5 text-slate-500" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateSubmit} className="mt-4 space-y-4">
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-350">Document Title *</label>
+                <input
+                  required
+                  type="text"
+                  value={showEditModal.name}
+                  onChange={(e) => setShowEditModal({ ...showEditModal, name: e.target.value })}
+                  className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-805 dark:text-white focus:outline-none focus:border-indigo-600 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-350">Description</label>
+                <textarea
+                  value={showEditModal.description || ''}
+                  onChange={(e) => setShowEditModal({ ...showEditModal, description: e.target.value })}
+                  rows={2}
+                  className="mt-1.5 w-full rounded-lg border border-slate-300 bg-slate-50 p-3 text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-805 dark:text-white focus:outline-none focus:border-indigo-600 focus:bg-white resize-none"
+                />
+              </div>
+
+              <div className="pt-2 flex space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(null)}
+                  className="flex-1 border border-slate-300 rounded-xl py-3 text-xs font-black text-slate-750 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
+                >
+                  Discard
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-indigo-600 text-white rounded-xl py-3 text-xs font-black hover:bg-indigo-750 shadow-md"
+                >
+                  Save Title & Info
                 </button>
               </div>
 
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* DOCUMENT PREVIEW MODAL */}
+      {previewDocument && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="w-full max-w-3xl rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+            
+            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+              <div className="flex items-center space-x-3">
+                <FileText className="h-6 w-6 text-indigo-650 dark:text-indigo-400" />
+                <div>
+                  <h3 className="text-base font-black text-slate-955 dark:text-white tracking-tight">{previewDocument.name}</h3>
+                  <p className="text-[10px] uppercase font-black tracking-wider text-slate-500 mt-0.5">{previewDocument.category} | Version 1.0</p>
+                </div>
+              </div>
+              <button onClick={() => setPreviewDocument(null)} className="rounded-lg p-1.5 hover:bg-slate-200 dark:hover:bg-slate-850">
+                <X className="h-5.5 w-5.5 text-slate-500" />
+              </button>
+            </div>
+
+            {/* Preview Body */}
+            <div className="p-6 bg-slate-55 dark:bg-slate-950 flex flex-col items-center justify-center min-h-[350px] max-h-[60vh] overflow-y-auto">
+              
+              {/* If image */}
+              {previewDocument.fileUrl && (previewDocument.fileUrl.endsWith('.png') || previewDocument.fileUrl.endsWith('.jpg') || previewDocument.fileUrl.endsWith('.jpeg') || previewDocument.fileType?.includes('png') || previewDocument.fileType?.includes('jpg')) ? (
+                <img 
+                  src={previewDocument.fileUrl} 
+                  alt={previewDocument.name} 
+                  className="max-w-full max-h-[50vh] object-contain rounded-lg shadow border border-slate-200 dark:border-slate-800" 
+                />
+              ) : previewDocument.fileUrl && previewDocument.fileUrl.endsWith('.pdf') ? (
+                // PDF Viewer
+                <iframe 
+                  src={previewDocument.fileUrl} 
+                  title={previewDocument.name} 
+                  className="w-full h-[50vh] border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm"
+                />
+              ) : (
+                // Fallback for non-image/non-pdf or mock files
+                <div className="text-center space-y-4 max-w-sm">
+                  <div className="mx-auto h-16 w-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center text-indigo-650 dark:text-indigo-400">
+                    <FileText className="h-9 w-9" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-slate-900 dark:text-white">Document Preview Unavailable</p>
+                    <p className="text-xs text-slate-550 dark:text-slate-400 mt-1 font-semibold">Pre-visualization is restricted to PDF and image extensions (PNG, JPG). Please download the dossier locally to inspect.</p>
+                  </div>
+                  <div className="pt-2 flex justify-center space-x-3">
+                    <button
+                      onClick={() => handleDownload(previewDocument.id, previewDocument.name)}
+                      className="inline-flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-4 py-2.5 text-xs font-black shadow-sm"
+                    >
+                      <Download className="h-4 w-4" />
+                      <span>Download File</span>
+                    </button>
+                    <button
+                      onClick={() => setPreviewDocument(null)}
+                      className="border border-slate-300 rounded-xl px-4 py-2.5 text-xs font-black text-slate-700 hover:bg-slate-55 dark:border-slate-700 dark:text-slate-300"
+                    >
+                      Close Window
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Preview Footer */}
+            <div className="p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-between">
+              <div className="text-xs font-semibold text-slate-550 dark:text-slate-400">
+                Uploaded by <span className="font-extrabold text-slate-800 dark:text-white">{previewDocument.ownerName}</span> on {previewDocument.uploadDate}
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleDownload(previewDocument.id, previewDocument.name)}
+                  className="inline-flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-4 py-2.5 text-xs font-black shadow-sm"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Download</span>
+                </button>
+                {isHR && previewDocument.status === 'Pending Verification' && (
+                  <>
+                    <button
+                      onClick={() => {
+                        handleApprove(previewDocument.id);
+                        setPreviewDocument(null);
+                      }}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-4 py-2.5 text-xs font-black shadow-sm"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleReject(previewDocument.id);
+                        setPreviewDocument(null);
+                      }}
+                      className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl px-4 py-2.5 text-xs font-black shadow-sm"
+                    >
+                      Reject
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
           </div>
         </div>
       )}

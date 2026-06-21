@@ -41,6 +41,7 @@ urlpatterns = [
     
     # App modules API placeholders
     path('api/accounts/', include('accounts.urls')),
+    path('api/hr/', include('accounts.hr_urls')),
     path('api/', include('employees.urls')),
     path('api/', include('attendance.urls')),
     path('api/', include('leave_management.urls')),

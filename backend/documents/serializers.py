@@ -31,6 +31,16 @@ class DocumentSerializer(serializers.ModelSerializer):
             return f"{obj.employee.first_name} {obj.employee.last_name}"
         return None
 
+    def validate(self, attrs):
+        request = self.context.get('request')
+        if request and request.user:
+            user = request.user
+            employee = attrs.get('employee')
+            if employee and not user.is_superuser and getattr(user, 'role', '') == 'HR':
+                if employee.assigned_hr != user:
+                    raise serializers.ValidationError({"employee": "You can only manage documents for your assigned employees."})
+        return attrs
+
 class DocumentAccessLogSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source='user.username')
     document_title = serializers.ReadOnlyField(source='document.title')

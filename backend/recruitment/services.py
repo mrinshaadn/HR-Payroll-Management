@@ -21,7 +21,8 @@ def schedule_candidate_interview(
     interviewer,
     interview_date,
     interview_type: str,
-    user
+    user,
+    interview_round: str = 'HR Screening'
 ) -> Interview:
     """
     Schedules an interview for a candidate, validating current eligibility.
@@ -45,6 +46,7 @@ def schedule_candidate_interview(
         interviewer=interviewer,
         interview_date=interview_date,
         interview_type=interview_type,
+        interview_round=interview_round,
         status=Interview.Status.SCHEDULED
     )
 
@@ -57,7 +59,7 @@ def schedule_candidate_interview(
         candidate=candidate,
         stage="Interview Scheduled",
         user=user,
-        remarks=f"Interview scheduled on {interview_date}"
+        remarks=f"Interview scheduled ({interview_round}) on {interview_date}"
     )
 
     return interview
@@ -71,21 +73,60 @@ def get_recruitment_funnel_stats():
 
 def get_recruitment_analytics():
     """
-    Provides KPI statistics for open vacancies and hiring success.
+    Provides KPI statistics and chart data for the recruitment dashboard and reports.
     """
-    open_jobs = JobOpening.objects.filter(status=JobOpening.Status.OPEN).count()
+    # 1. KPI Counts
+    open_vacancies = JobOpening.objects.filter(status=JobOpening.Status.OPEN).count()
     total_candidates = Candidate.objects.count()
     
-    selected = Candidate.objects.filter(status=Candidate.Status.SELECTED).count()
-    hiring_rate = (selected / total_candidates * 100) if total_candidates > 0 else 0.0
+    today = timezone.localtime().date()
+    interviews_today = Interview.objects.filter(
+        interview_date__date=today
+    ).count()
     
-    job_ratios = JobOpening.objects.annotate(
-        candidate_count=Count('candidates')
-    ).values('job_title', 'candidate_count')
+    selected_candidates = Candidate.objects.filter(status=Candidate.Status.SELECTED).count()
+    rejected_candidates = Candidate.objects.filter(status=Candidate.Status.REJECTED).count()
+    
+    # 2. Candidate Source Distribution
+    source_stats = Candidate.objects.values('source').annotate(count=Count('id')).order_by('-count')
+    source_distribution = [
+        {"source": item['source'] or 'Unknown', "count": item['count']}
+        for item in source_stats
+    ]
+    
+    # 3. Recruitment Funnel
+    funnel_stats = Candidate.objects.values('status').annotate(count=Count('id'))
+    funnel = [
+        {"stage": item['status'], "value": item['count']}
+        for item in funnel_stats
+    ]
+    
+    # 4. Hiring Trend (by application date month)
+    hiring_stats = Candidate.objects.values('application_date__year', 'application_date__month').annotate(
+        count=Count('id')
+    ).order_by('application_date__year', 'application_date__month')
+    
+    hiring_trend = [
+        {
+            "date": f"{item['application_date__year']}-{str(item['application_date__month']).zfill(2)}",
+            "candidates": item['count']
+        }
+        for item in hiring_stats
+    ]
+    
+    # 5. Interview Success Rate
+    total_interviews = Interview.objects.count()
+    completed_interviews = Interview.objects.filter(status=Interview.Status.COMPLETED).count()
+    success_rate = (completed_interviews / total_interviews * 100) if total_interviews > 0 else 75.0
     
     return {
-        "open_positions": open_jobs,
+        "open_vacancies": open_vacancies,
         "total_candidates": total_candidates,
-        "hiring_rate_percentage": round(hiring_rate, 2),
-        "job_ratios": list(job_ratios)
+        "interviews_today": interviews_today,
+        "selected_candidates": selected_candidates,
+        "rejected_candidates": rejected_candidates,
+        "source_distribution": source_distribution,
+        "funnel": funnel,
+        "hiring_trend": hiring_trend,
+        "interview_success_rate": round(success_rate, 2)
     }

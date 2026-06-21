@@ -25,6 +25,13 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             from .views import get_or_create_employee_profile
             employee = get_or_create_employee_profile(user)
             queryset = queryset.filter(employee=employee)
+        elif user.role == 'HR' and not user.is_superuser:
+            # HR sees only assigned employees + own profile
+            from django.db.models import Q
+            queryset = queryset.filter(Q(employee__assigned_hr=user) | Q(employee__user=user))
+            emp_id = self.request.query_params.get('employee_id')
+            if emp_id:
+                queryset = queryset.filter(employee_id=emp_id)
         else:
             emp_id = self.request.query_params.get('employee_id')
             if emp_id:
@@ -36,7 +43,11 @@ class AttendanceViewSet(viewsets.ModelViewSet):
                     queryset = queryset.filter(employee__department_id=dept)
                 else:
                     queryset = queryset.filter(employee__department__name__iexact=dept)
-                
+
+        role_filter = self.request.query_params.get('role')
+        if role_filter and role_filter != 'All Roles' and role_filter != 'All':
+            queryset = queryset.filter(employee__user__role=role_filter.upper())
+            
         status_filter = self.request.query_params.get('status')
         if status_filter:
             queryset = queryset.filter(status=status_filter)

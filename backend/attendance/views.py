@@ -217,21 +217,28 @@ def attendance_history(request):
     from datetime import timedelta
     
     # 1. Determine target employee(s)
+    from django.db.models import Q
     if not (user.is_superuser or user.role in ['ADMIN', 'HR']):
         employee = get_or_create_employee_profile(user)
-        employees = [employee]
+        employees = Employee.objects.filter(employee_id=employee.employee_id)
     else:
         emp_id = request.query_params.get('employee_id')
         dept = request.query_params.get('department')
+        role_filter = request.query_params.get('role')
+        
+        employees = Employee.objects.filter(is_deleted=False)
+        if user.role == 'HR' and not user.is_superuser:
+            employees = employees.filter(Q(assigned_hr=user) | Q(user=user))
+            
         if emp_id:
-            employees = Employee.objects.filter(employee_id=emp_id)
-        elif dept:
+            employees = employees.filter(employee_id=emp_id)
+        if dept:
             if dept.isdigit():
-                employees = Employee.objects.filter(department_id=dept, is_deleted=False)
+                employees = employees.filter(department_id=dept)
             else:
-                employees = Employee.objects.filter(department__name__iexact=dept, is_deleted=False)
-        else:
-            employees = Employee.objects.filter(is_deleted=False)
+                employees = employees.filter(department__name__iexact=dept)
+        if role_filter and role_filter != 'All Roles' and role_filter != 'All':
+            employees = employees.filter(user__role=role_filter.upper())
             
     # 2. Determine date range
     start_date_str = request.query_params.get('start_date')
@@ -311,6 +318,9 @@ def attendance_history(request):
                         'employee_name': emp.first_name,
                         'employee_last_name': emp.last_name,
                         'employee_code': emp.employee_id,
+                        'employee_role': emp.user.role if emp.user else 'EMPLOYEE',
+                        'employee_department': emp.department.name if emp.department else '',
+                        'employee_assigned_hr_name': f"{emp.assigned_hr.first_name} {emp.assigned_hr.last_name}".strip() or emp.assigned_hr.username if emp.assigned_hr else '',
                         'date': curr_date.strftime("%Y-%m-%d"),
                         'check_in': None,
                         'check_out': None,

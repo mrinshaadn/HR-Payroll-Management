@@ -81,7 +81,12 @@ class AttendanceModuleTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
-        # HR history (sees all)
+        # HR history (sees all assigned)
+        self.emp1.assigned_hr = self.hr
+        self.emp1.save()
+        self.emp2.assigned_hr = self.hr
+        self.emp2.save()
+
         self.client.force_authenticate(user=self.hr)
         response_hr = self.client.get(history_url)
         self.assertEqual(response_hr.status_code, status.HTTP_200_OK)

@@ -35,7 +35,8 @@ class EmployeesModuleTests(APITestCase):
             email="emp1@t.com",
             department=self.dept,
             designation=self.designation,
-            employment_status="ACTIVE"
+            employment_status="ACTIVE",
+            assigned_hr=self.hr
         )
         self.emp2 = Employee.objects.create(
             employee_id="EMP002",
@@ -45,7 +46,8 @@ class EmployeesModuleTests(APITestCase):
             email="emp2@t.com",
             department=self.dept,
             designation=self.designation,
-            employment_status="ACTIVE"
+            employment_status="ACTIVE",
+            assigned_hr=self.hr
         )
 
     def test_department_crud_permissions(self):

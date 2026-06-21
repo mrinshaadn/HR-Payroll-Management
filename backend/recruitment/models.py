@@ -3,6 +3,7 @@ from django.conf import settings
 
 class JobOpening(models.Model):
     class Status(models.TextChoices):
+        DRAFT = 'Draft', 'Draft'
         OPEN = 'Open', 'Open'
         CLOSED = 'Closed', 'Closed'
         ON_HOLD = 'On Hold', 'On Hold'
@@ -41,8 +42,10 @@ class JobOpening(models.Model):
 class Candidate(models.Model):
     class Status(models.TextChoices):
         APPLIED = 'Applied', 'Applied'
+        SCREENING = 'Screening', 'Screening'
         SHORTLISTED = 'Shortlisted', 'Shortlisted'
         INTERVIEW_SCHEDULED = 'Interview Scheduled', 'Interview Scheduled'
+        INTERVIEW_COMPLETED = 'Interview Completed', 'Interview Completed'
         SELECTED = 'Selected', 'Selected'
         REJECTED = 'Rejected', 'Rejected'
 
@@ -87,6 +90,12 @@ class Interview(models.Model):
         COMPLETED = 'Completed', 'Completed'
         CANCELLED = 'Cancelled', 'Cancelled'
 
+    class Round(models.TextChoices):
+        HR_SCREENING = 'HR Screening', 'HR Screening'
+        TECHNICAL_ROUND = 'Technical Round', 'Technical Round'
+        MANAGER_ROUND = 'Manager Round', 'Manager Round'
+        FINAL_ROUND = 'Final Round', 'Final Round'
+
     candidate = models.ForeignKey(
         Candidate,
         on_delete=models.CASCADE,
@@ -107,6 +116,11 @@ class Interview(models.Model):
         max_length=20,
         choices=Type.choices,
         default=Type.ONLINE
+    )
+    interview_round = models.CharField(
+        max_length=50,
+        choices=Round.choices,
+        default=Round.HR_SCREENING
     )
     status = models.CharField(
         max_length=20,

@@ -23,13 +23,14 @@ class LeaveBalanceSerializer(serializers.ModelSerializer):
 class LeaveRequestSerializer(serializers.ModelSerializer):
     employee_name = serializers.ReadOnlyField(source='employee.name')
     employee_last_name = serializers.ReadOnlyField(source='employee.last_name')
+    employee_role = serializers.ReadOnlyField(source='employee.user.role')
     leave_type_name = serializers.ReadOnlyField(source='leave_type.name')
     approved_by_name = serializers.ReadOnlyField(source='approved_by.username')
 
     class Meta:
         model = LeaveRequest
         fields = [
-            'id', 'employee', 'employee_name', 'employee_last_name',
+            'id', 'employee', 'employee_name', 'employee_last_name', 'employee_role',
             'leave_type', 'leave_type_name', 'start_date', 'end_date',
             'total_days', 'reason', 'status', 'approved_by',
             'approved_by_name', 'approved_at', 'rejection_reason',

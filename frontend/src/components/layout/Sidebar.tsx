@@ -17,7 +17,8 @@ import {
   Plus,
   Compass,
   X,
-  FileCheck
+  FileCheck,
+  Shield
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -43,12 +44,28 @@ export default function Sidebar() {
     { name: 'Recruitment', path: '/recruitment', icon: Briefcase, badge: activeOpenings },
     { name: 'Analytics', path: '/analytics', icon: BarChart3 },
     { name: 'Documents', path: '/documents', icon: FileText },
-    { name: 'Settings', path: '/settings', icon: Settings },
   ];
+
+  if (user?.role === 'ADMIN') {
+    navItems.push({ name: 'HR Management', path: '/hr-management', icon: Users });
+  }
+
+  if (user?.role === 'ADMIN') {
+    navItems.push({ name: 'Users', path: '/users', icon: Shield });
+  }
+
+  // Admin gets settings as well
+  if (user?.role === 'ADMIN') {
+    navItems.push({ name: 'Settings', path: '/settings', icon: Settings });
+  }
 
   const filteredNavItems = navItems.filter((item) => {
     if (user?.role === 'EMPLOYEE') {
       const allowed = ['Dashboard', 'Attendance', 'Leave', 'Payroll', 'Documents'];
+      return allowed.includes(item.name);
+    }
+    if (user?.role === 'HR') {
+      const allowed = ['Dashboard', 'Employees', 'Attendance', 'Leave', 'Payroll', 'Recruitment', 'Analytics', 'Documents'];
       return allowed.includes(item.name);
     }
     return true;
@@ -128,15 +145,17 @@ export default function Sidebar() {
           </NavLink>
         ))}
 
-        <div className="pt-4 mt-4 border-t border-slate-800/60">
-          <button
-            onClick={() => setShowQuickRequest(true)}
-            className="flex w-full items-center justify-center space-x-2 rounded-lg bg-blue-600/10 hover:bg-blue-600 py-2.5 text-xs font-extrabold text-blue-400 hover:text-white transition duration-200 border border-blue-500/20"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>New Quick Request</span>
-          </button>
-        </div>
+        {user?.role !== 'EMPLOYEE' && (
+          <div className="pt-4 mt-4 border-t border-slate-800/60">
+            <button
+              onClick={() => setShowQuickRequest(true)}
+              className="flex w-full items-center justify-center space-x-2 rounded-lg bg-blue-600/10 hover:bg-blue-600 py-2.5 text-xs font-extrabold text-blue-400 hover:text-white transition duration-200 border border-blue-500/20"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>New Quick Request</span>
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* Bottom Footer Section */}

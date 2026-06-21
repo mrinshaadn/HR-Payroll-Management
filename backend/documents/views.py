@@ -30,11 +30,11 @@ class UploadDocumentRequestSerializer(serializers.Serializer):
     request=UploadDocumentRequestSerializer,
     responses={201: DocumentSerializer},
     summary="Upload Document",
-    description="Uploads a new document file and auto-saves metadata (HR/Admin only).",
+    description="Uploads a new document file.",
     tags=['Documents']
 )
 @api_view(['POST'])
-@permission_classes([IsAuthenticated, IsAdminOrHR])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def upload_document_api(request):
     """
@@ -60,14 +60,29 @@ def upload_document_api(request):
             status=status.HTTP_404_NOT_FOUND
         )
 
+    user = request.user
+    is_hr = user.is_superuser or user.role in ['ADMIN', 'HR']
+
     employee = None
-    if employee_id:
-        try:
-            employee = Employee.objects.get(employee_id=employee_id)
-        except Employee.DoesNotExist:
+    if is_hr:
+        if employee_id:
+            try:
+                employee = Employee.objects.get(employee_id=employee_id)
+            except Employee.DoesNotExist:
+                try:
+                    employee = Employee.objects.get(id=employee_id)
+                except (Employee.DoesNotExist, ValueError):
+                    return Response(
+                        {"detail": "Employee not found."},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+    else:
+        if hasattr(user, 'employee_profile'):
+            employee = user.employee_profile
+        else:
             return Response(
-                {"detail": "Employee not found."},
-                status=status.HTTP_404_NOT_FOUND
+                {"detail": "Only employees with a profile can upload documents."},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
     ext, size = extract_file_metadata(file_obj)
@@ -79,6 +94,8 @@ def upload_document_api(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    initial_status = Document.Status.PENDING if not is_hr else Document.Status.ACTIVE
+
     doc = Document.objects.create(
         title=title,
         category=category,
@@ -89,7 +106,7 @@ def upload_document_api(request):
         file_size=size,
         description=description,
         version='1.0',
-        status=Document.Status.ACTIVE
+        status=initial_status
     )
 
     # Log action
@@ -269,13 +286,9 @@ def employee_documents_api(request, employee_id):
     # Permission check for Employee object
     user = request.user
     if not (user.is_superuser or user.role in ['ADMIN', 'HR']):
-        if user.role == 'MANAGER':
-            if hasattr(user, 'employee_profile') and employee.department != user.employee_profile.department:
-                return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
-        else:
-            if not (hasattr(user, 'employee_profile') and employee == user.employee_profile):
-                return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        if not (hasattr(user, 'employee_profile') and employee == user.employee_profile):
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
 
-    docs = Document.objects.filter(employee=employee, status=Document.Status.ACTIVE)
+    docs = Document.objects.filter(employee=employee).exclude(status=Document.Status.DELETED).order_by('-uploaded_at')
     serializer = DocumentSerializer(docs, many=True)
     return Response(serializer.data)

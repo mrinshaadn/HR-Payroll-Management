@@ -49,12 +49,12 @@ def get_analytics_response_serializer(name, data_fields):
     tags=['Analytics']
 )
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, IsManagerOrHROrAdmin])
+@permission_classes([IsAuthenticated])
 def dashboard_analytics(request):
     """
     Overview statistics for the main dashboard view.
     """
-    data = get_dashboard_overview()
+    data = get_dashboard_overview(request.user, request.query_params)
     return success_response(data)
 
 @extend_schema(
@@ -74,12 +74,12 @@ def dashboard_analytics(request):
     tags=['Analytics']
 )
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, IsManagerOrHROrAdmin])
+@permission_classes([IsAuthenticated])
 def employee_analytics_view(request):
     """
     Workforce stats, department breakdowns, and gender distributions.
     """
-    data = get_employee_analytics()
+    data = get_employee_analytics(request.user, request.query_params)
     return success_response(data)
 
 @extend_schema(
@@ -98,12 +98,12 @@ def employee_analytics_view(request):
     tags=['Analytics']
 )
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, IsManagerOrHROrAdmin])
+@permission_classes([IsAuthenticated])
 def attendance_analytics_view(request):
     """
     Daily attendance rates, clock-in ratios, and 30-day trends.
     """
-    data = get_attendance_analytics()
+    data = get_attendance_analytics(request.user, request.query_params)
     return success_response(data)
 
 @extend_schema(
@@ -122,12 +122,12 @@ def attendance_analytics_view(request):
     tags=['Analytics']
 )
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, IsManagerOrHROrAdmin])
+@permission_classes([IsAuthenticated])
 def leave_analytics_view(request):
     """
     Pending/approved request counts and department ratios.
     """
-    data = get_leave_analytics()
+    data = get_leave_analytics(request.user, request.query_params)
     return success_response(data)
 
 @extend_schema(
@@ -145,12 +145,12 @@ def leave_analytics_view(request):
     tags=['Analytics']
 )
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, IsManagerOrHROrAdmin])
+@permission_classes([IsAuthenticated])
 def payroll_analytics_view(request):
     """
     Gross payout, average salary, tax, and pf costs.
     """
-    data = get_payroll_analytics()
+    data = get_payroll_analytics(request.user, request.query_params)
     return success_response(data)
 
 @extend_schema(
@@ -167,12 +167,12 @@ def payroll_analytics_view(request):
     tags=['Analytics']
 )
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, IsManagerOrHROrAdmin])
+@permission_classes([IsAuthenticated])
 def recruitment_analytics_view(request):
     """
     Funnel pipeline stage ratios and opening parameters.
     """
-    data = get_recruitment_analytics()
+    data = get_recruitment_analytics(request.user, request.query_params)
     return success_response(data)
 
 @extend_schema(
@@ -188,12 +188,12 @@ def recruitment_analytics_view(request):
     tags=['Analytics']
 )
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, IsManagerOrHROrAdmin])
+@permission_classes([IsAuthenticated])
 def document_analytics_view(request):
     """
     Categorized file count and completion rate parameters.
     """
-    data = get_document_analytics()
+    data = get_document_analytics(request.user, request.query_params)
     return success_response(data)
 
 @extend_schema(
@@ -210,12 +210,12 @@ def document_analytics_view(request):
     tags=['Analytics']
 )
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, IsManagerOrHROrAdmin])
+@permission_classes([IsAuthenticated])
 def overview_analytics(request):
     """
     Alternative overview metrics.
     """
-    data = get_dashboard_overview()
+    data = get_dashboard_overview(request.user, request.query_params)
     return success_response(data)
 
 @extend_schema(
@@ -231,10 +231,10 @@ def overview_analytics(request):
     tags=['Analytics']
 )
 @api_view(['GET'])
-@permission_classes([IsAuthenticated, IsManagerOrHROrAdmin])
+@permission_classes([IsAuthenticated])
 def charts_analytics(request):
     """
     Chart data mapping coordinates.
     """
-    data = get_chart_data()
+    data = get_chart_data(request.user, request.query_params)
     return success_response(data)

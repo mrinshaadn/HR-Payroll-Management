@@ -86,6 +86,23 @@ def deduct_leave_balance(employee_id: str, leave_type_id: int, total_days: float
     balance.save()
     return True
 
+def credit_leave_balance(employee_id: str, leave_type_id: int, total_days: float, year: int) -> bool:
+    """
+    Credits back approved leave days to the user's LeaveBalance.
+    """
+    try:
+        balance = LeaveBalance.objects.get(
+            employee_id=employee_id,
+            leave_type_id=leave_type_id,
+            year=year
+        )
+        balance.used_days = max(0.0, float(balance.used_days) - float(total_days))
+        balance.remaining_days = float(balance.total_days) - float(balance.used_days)
+        balance.save()
+        return True
+    except LeaveBalance.DoesNotExist:
+        return False
+
 def generate_leave_reports(year: int):
     """
     Generates statistics on leave requests across departments.

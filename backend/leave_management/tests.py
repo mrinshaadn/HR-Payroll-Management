@@ -27,7 +27,7 @@ class LeaveManagementModuleTests(APITestCase):
         self.emp = Employee.objects.create(
             employee_id="EMP001", user=self.emp_user, first_name="Emp", last_name="One",
             email="emp@t.com", department=self.dept, designation=self.desig,
-            employment_status="ACTIVE"
+            employment_status="ACTIVE", assigned_hr=self.hr
         )
 
         # Leave types & balances
@@ -83,3 +83,57 @@ class LeaveManagementModuleTests(APITestCase):
         self.balance.refresh_from_db()
         self.assertEqual(self.balance.used_days, 3)
         self.assertEqual(self.balance.remaining_days, 9)
+
+    def test_leave_approval_hierarchy_rules(self):
+        # Create Admin
+        admin = User.objects.create_user(
+            username='admin_test', email='admin@t.com', password='pwd', role='ADMIN'
+        )
+
+        # Create HR Employee profile
+        hr_emp = Employee.objects.create(
+            employee_id="EMP002", user=self.hr, first_name="HR", last_name="User",
+            email="hr@t.com", department=self.dept, designation=self.desig,
+            employment_status="ACTIVE"
+        )
+        hr_balance = LeaveBalance.objects.create(
+            employee=hr_emp, leave_type=self.leave_type, total_days=12, used_days=0, remaining_days=12, year=2026
+        )
+
+        # HR applies for leave
+        today = timezone.localdate()
+        hr_req = LeaveRequest.objects.create(
+            employee=hr_emp, leave_type=self.leave_type,
+            start_date=today, end_date=today + timedelta(days=1),
+            total_days=2, reason='Holiday', status='Pending'
+        )
+
+        # 1. HR tries to approve own leave (should be denied)
+        self.client.force_authenticate(user=self.hr)
+        approve_url = reverse('leave-approve')
+        response = self.client.post(approve_url, {'request_id': hr_req.id})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        # 2. Another HR tries to approve it (should be denied because only Admin can approve HR leave)
+        another_hr = User.objects.create_user(
+            username='hr2', email='hr2@t.com', password='pwd', role='HR'
+        )
+        self.client.force_authenticate(user=another_hr)
+        response = self.client.post(approve_url, {'request_id': hr_req.id})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        # 3. Admin approves HR leave (should succeed)
+        self.client.force_authenticate(user=admin)
+        response = self.client.post(approve_url, {'request_id': hr_req.id})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'Approved')
+        
+        # 4. Admin overrides decision (rejecting the approved leave, credits back balance)
+        reject_url = reverse('leave-reject')
+        response = self.client.post(reject_url, {'request_id': hr_req.id, 'rejection_reason': 'Business need'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'Rejected')
+        
+        hr_balance.refresh_from_db()
+        self.assertEqual(hr_balance.used_days, 0)
+        self.assertEqual(hr_balance.remaining_days, 12)

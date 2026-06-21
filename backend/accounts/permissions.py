@@ -42,10 +42,6 @@ class IsOwnerOrHR(permissions.BasePermission):
             
         # Check if the obj has employee link
         if hasattr(obj, 'employee'):
-            if user.role == 'MANAGER':
-                if request.method in permissions.SAFE_METHODS:
-                    return obj.employee and hasattr(user, 'employee_profile') and obj.employee.department == user.employee_profile.department
-                return False
             return obj.employee and hasattr(obj.employee, 'user') and obj.employee.user == user
             
         # Check if obj has payroll -> employee link
@@ -54,11 +50,8 @@ class IsOwnerOrHR(permissions.BasePermission):
 
         return False
 
-class IsManagerOrHROrAdmin(permissions.BasePermission):
-    def has_permission(self, request, view):
-        user = request.user
-        return user.is_authenticated and (
-            user.is_superuser or 
-            user.role in ['ADMIN', 'HR', 'MANAGER']
-        )
+# Compatibility alias for renamed/removed manager roles
+IsManagerOrHROrAdmin = IsAdminOrHR
+
+
 

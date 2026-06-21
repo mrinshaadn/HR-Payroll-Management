@@ -62,6 +62,9 @@ export const mapBackendAttendanceToFrontend = (data: any): AttendanceRecord => {
     workHours: formatHoursMinutes(data.total_hours, data.total_minutes),
     overtime: formatOvertime(data.overtime_hours, data.overtime_minutes),
     status: getStatus(data.status),
+    employeeRole: data.employee_role,
+    employeeDepartment: data.employee_department,
+    employeeAssignedHR: data.employee_assigned_hr_name,
   };
 };
 
@@ -112,7 +115,7 @@ export const attendanceService = {
   },
 
   // Required: getAttendanceHistory()
-  getAttendanceHistory: async (params?: { employee_id?: string; status?: string; start_date?: string; end_date?: string; department?: string; synth?: boolean }): Promise<AttendanceRecord[]> => {
+  getAttendanceHistory: async (params?: { employee_id?: string; status?: string; start_date?: string; end_date?: string; department?: string; role?: string; synth?: boolean }): Promise<AttendanceRecord[]> => {
     try {
       const { synth, ...rest } = params || {};
       const queryParams: any = { ...rest };

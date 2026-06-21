@@ -1,5 +1,6 @@
 from datetime import datetime, date
 from django.utils import timezone
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -13,6 +14,7 @@ from .services import (
     check_overlapping_requests,
     validate_leave_balance,
     deduct_leave_balance,
+    credit_leave_balance,
     generate_leave_reports
 )
 from accounts.permissions import IsAdminOrHR
@@ -122,6 +124,7 @@ def apply_leave(request):
 def approve_leave(request):
     """
     Approves a pending leave request, deducting remaining balance days.
+    Supports ADMIN override and strict hierarchy checks.
     """
     request_id = request.data.get('request_id')
     if not request_id:
@@ -138,22 +141,51 @@ def approve_leave(request):
             status=status.HTTP_404_NOT_FOUND
         )
 
-    if leave_req.status != LeaveRequest.Status.PENDING:
+    is_admin = request.user.role == 'ADMIN' or request.user.is_superuser
+
+    # 1. Cannot approve own leave
+    if hasattr(leave_req.employee, 'user') and leave_req.employee.user == request.user:
+        return Response(
+            {"detail": "Permission denied. You cannot approve your own leave request."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # 2. Check Hierarchy
+    applicant_user = leave_req.employee.user
+    if applicant_user and applicant_user.role == 'HR':
+        if not is_admin:
+            return Response(
+                {"detail": "Permission denied. Only Admins can approve HR leave requests."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+    elif applicant_user and applicant_user.role == 'EMPLOYEE':
+        if request.user.role == 'HR' and not request.user.is_superuser:
+            if leave_req.employee.assigned_hr != request.user:
+                return Response(
+                    {"detail": "Permission denied. You can only approve leave for your assigned employees."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+    # 3. Check State & Override
+    if leave_req.status != LeaveRequest.Status.PENDING and not is_admin:
         return Response(
             {"detail": f"Leave request is already in {leave_req.status} state."},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Validate balance is still available prior to approval
     year = leave_req.start_date.year
-    if not validate_leave_balance(leave_req.employee.employee_id, leave_req.leave_type.id, leave_req.total_days, year):
-        return Response(
-            {"detail": "Cannot approve. Employee balance has become insufficient."},
-            status=status.HTTP_400_BAD_REQUEST
-        )
 
-    # Deduct balance
-    deduct_leave_balance(leave_req.employee.employee_id, leave_req.leave_type.id, leave_req.total_days, year)
+    # If it was already approved, no action needed unless we are changing it.
+    # If it was rejected or cancelled, we check balance before re-approving.
+    if leave_req.status != LeaveRequest.Status.APPROVED:
+        # Validate balance is still available prior to approval
+        if not validate_leave_balance(leave_req.employee.employee_id, leave_req.leave_type.id, leave_req.total_days, year):
+            return Response(
+                {"detail": "Cannot approve. Employee balance has become insufficient."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        # Deduct balance
+        deduct_leave_balance(leave_req.employee.employee_id, leave_req.leave_type.id, leave_req.total_days, year)
     
     leave_req.status = LeaveRequest.Status.APPROVED
     leave_req.approved_by = request.user
@@ -180,7 +212,7 @@ def approve_leave(request):
 @permission_classes([IsAuthenticated, IsAdminOrHR])
 def reject_leave(request):
     """
-    Rejects a pending leave request.
+    Rejects a pending leave request. Supports ADMIN override.
     """
     request_id = request.data.get('request_id')
     rejection_reason = request.data.get('rejection_reason', '')
@@ -199,11 +231,42 @@ def reject_leave(request):
             status=status.HTTP_404_NOT_FOUND
         )
 
-    if leave_req.status != LeaveRequest.Status.PENDING:
+    is_admin = request.user.role == 'ADMIN' or request.user.is_superuser
+
+    # 1. Cannot reject own leave
+    if hasattr(leave_req.employee, 'user') and leave_req.employee.user == request.user:
+        return Response(
+            {"detail": "Permission denied. You cannot reject your own leave request."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # 2. Check Hierarchy
+    applicant_user = leave_req.employee.user
+    if applicant_user and applicant_user.role == 'HR':
+        if not is_admin:
+            return Response(
+                {"detail": "Permission denied. Only Admins can reject HR leave requests."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+    elif applicant_user and applicant_user.role == 'EMPLOYEE':
+        if request.user.role == 'HR' and not request.user.is_superuser:
+            if leave_req.employee.assigned_hr != request.user:
+                return Response(
+                    {"detail": "Permission denied. You can only reject leave for your assigned employees."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+    # 3. Check State & Override
+    if leave_req.status != LeaveRequest.Status.PENDING and not is_admin:
         return Response(
             {"detail": f"Leave request is already in {leave_req.status} state."},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+    # Credit back balance if overriding an already APPROVED request
+    if leave_req.status == LeaveRequest.Status.APPROVED:
+        year = leave_req.start_date.year
+        credit_leave_balance(leave_req.employee.employee_id, leave_req.leave_type.id, leave_req.total_days, year)
 
     leave_req.status = LeaveRequest.Status.REJECTED
     leave_req.rejection_reason = rejection_reason
@@ -239,7 +302,14 @@ def leave_history(request):
             queryset = queryset.filter(employee=employee)
         except Employee.DoesNotExist:
             return Response([])
+    elif user.role == 'HR' and not user.is_superuser:
+        # HR sees requests for their assigned employees, OR their own requests.
+        queryset = queryset.filter(Q(employee__assigned_hr=user) | Q(employee__user=user))
+        emp_id = request.query_params.get('employee_id')
+        if emp_id:
+            queryset = queryset.filter(employee_id=emp_id)
     else:
+        # Admin / Superuser sees all.
         emp_id = request.query_params.get('employee_id')
         if emp_id:
             queryset = queryset.filter(employee_id=emp_id)

@@ -9,3 +9,5 @@ export { default as Reports } from './Analytics/Reports';
 export { default as Documents } from './Documents/Documents';
 export { default as Settings } from './Settings/Settings';
 export { default as Auth } from './Auth/Auth';
+export { default as UsersManagement } from './Users/UsersManagement';
+export { default as HRManagement } from './HRManagement/HRManagement';

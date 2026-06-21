@@ -56,6 +56,16 @@ export default function Auth() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  React.useEffect(() => {
+    const savedEmail = localStorage.getItem('hrms_remember_email');
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   React.useEffect(() => {
     const checkScreen = () => {
@@ -82,6 +92,11 @@ export default function Auth() {
       const success = await loginUser(email, password);
       setLoading(false);
       if (success) {
+        if (rememberMe) {
+          localStorage.setItem('hrms_remember_email', email);
+        } else {
+          localStorage.removeItem('hrms_remember_email');
+        }
         navigate('/dashboard');
       } else {
         setError('Invalid credentials. Please enter a valid username/email and password.');
@@ -298,14 +313,33 @@ export default function Auth() {
               <div className="relative mt-1">
                 <Lock className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   placeholder="Enter your security password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-11 w-full rounded-lg border border-slate-200 bg-slate-55 pl-10 pr-4 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-850 dark:text-slate-100 dark:focus:bg-slate-900"
+                  className="h-11 w-full rounded-lg border border-slate-200 bg-slate-55 pl-10 pr-12 text-xs font-semibold text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-850 dark:text-slate-100 dark:focus:bg-slate-900"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute top-1/2 right-3.5 -translate-y-1/2 text-xs font-extrabold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white"
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
               </div>
+            </div>
+
+            <div className="flex items-center justify-between mt-1">
+              <label className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-450 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="mr-2 rounded border-slate-350 text-blue-600 focus:ring-blue-500 bg-slate-100 dark:bg-slate-800"
+                />
+                <span>Remember Me</span>
+              </label>
             </div>
 
             <button

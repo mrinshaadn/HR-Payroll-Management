@@ -1,5 +1,6 @@
 from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Q
 from .models import LeaveType, LeaveBalance, LeaveRequest
 from .serializers import LeaveTypeSerializer, LeaveBalanceSerializer, LeaveRequestSerializer
 from accounts.permissions import IsAdminOrHR, IsOwnerOrHR
@@ -30,6 +31,9 @@ class LeaveBalanceViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(employee=user.employee_profile)
             else:
                 queryset = queryset.none()
+        elif user.role == 'HR' and not user.is_superuser:
+            # HR sees only assigned employees' records, plus their own records
+            queryset = queryset.filter(Q(employee__assigned_hr=user) | Q(employee__user=user))
                 
         return queryset
 
@@ -48,6 +52,9 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(employee=user.employee_profile)
             else:
                 queryset = queryset.none()
+        elif user.role == 'HR' and not user.is_superuser:
+            # HR sees only assigned employees' requests, plus their own requests
+            queryset = queryset.filter(Q(employee__assigned_hr=user) | Q(employee__user=user))
                 
         return queryset
 

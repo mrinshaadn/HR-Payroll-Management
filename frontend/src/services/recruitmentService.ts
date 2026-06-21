@@ -2,29 +2,27 @@ import { api } from './api';
 import { RecruitmentCandidate } from '../types';
 
 export const mapBackendCandidateToFrontend = (data: any): RecruitmentCandidate => {
-  const getStage = (stage: string): RecruitmentCandidate['stage'] => {
-    switch (stage) {
-      case 'APPLIED': return 'Applied';
-      case 'SCREENING': return 'Screening';
-      case 'INTERVIEW': return 'Interviews';
-      case 'SHORTLISTED': return 'Interviews';
-      case 'OFFERED': return 'Offer';
-      case 'HIRED': return 'Offer';
-      default: return 'Applied';
-    }
-  };
-
   return {
     id: String(data.id),
     name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Candidate',
     avatar: data.profile_picture || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
     role: data.job_title || 'Software Developer',
     tags: data.skills ? data.skills.split(',').map((s: string) => s.trim()) : ['Design Systems', 'React'],
-    experience: data.experience_years ? `${data.experience_years}+ Years` : '3+ Years',
-    score: data.test_score ? `${data.test_score}%` : '85%',
-    stage: getStage(data.stage),
-    status: data.stage || 'APPLIED',
-    appliedDate: data.applied_date || 'Just Now',
+    experience: data.experience || '3+ Years',
+    score: '85%',
+    stage: (data.status || 'Applied') as RecruitmentCandidate['stage'],
+    status: data.status || 'Applied',
+    appliedDate: data.application_date || 'Just Now',
+    first_name: data.first_name || '',
+    last_name: data.last_name || '',
+    email: data.email || '',
+    phone: data.phone || '',
+    address: data.address || '',
+    skills: data.skills || '',
+    education: data.education || '',
+    source: data.source || '',
+    job_opening: data.job_opening || 1,
+    resume: data.resume || '',
   };
 };
 
@@ -103,9 +101,13 @@ export const recruitmentService = {
           last_name: lastName,
           email: data.email || `${(firstName + lastName).toLowerCase()}@test.com`,
           phone: data.phone || '1234567890',
-          job: data.job || 1,
-          experience_years: data.experience_years || 3,
-          stage: data.status || 'APPLIED'
+          job_opening: data.job_opening || 1,
+          experience: data.experience || '3+ Years',
+          status: data.status || 'Applied',
+          skills: data.skills || '',
+          education: data.education || '',
+          address: data.address || '',
+          source: data.source || 'Website'
         };
       }
 
@@ -157,12 +159,15 @@ export const recruitmentService = {
   },
 
   // Required: scheduleInterview()
-  scheduleInterview: async (candidateId: number, dateStr: string, interviewerId: number): Promise<any> => {
+  scheduleInterview: async (candidateId: number, jobOpeningId: number, dateStr: string, interviewerId: number, mode: string, round: string): Promise<any> => {
     try {
       const response = await api.post('/recruitment/interviews/schedule/', {
         candidate_id: candidateId,
+        job_opening_id: jobOpeningId,
         interview_date: dateStr,
-        interviewer: interviewerId,
+        interviewer_id: interviewerId,
+        interview_type: mode,
+        interview_round: round,
       });
       return response.data;
     } catch (error) {
@@ -229,19 +234,8 @@ export const recruitmentService = {
 
   updateCandidateStage: async (id: string, stage: RecruitmentCandidate['stage']): Promise<RecruitmentCandidate | null> => {
     try {
-      const mapFrontendStageToBackend = (st: string) => {
-        switch (st) {
-          case 'Applied': return 'APPLIED';
-          case 'Screening': return 'SCREENING';
-          case 'Interviews': return 'INTERVIEW';
-          case 'Final Stage': return 'SHORTLISTED';
-          case 'Offer': return 'OFFERED';
-          default: return 'APPLIED';
-        }
-      };
-
       const response = await api.patch(`/recruitment/candidates/${id}/`, {
-        stage: mapFrontendStageToBackend(stage),
+        status: stage,
       });
       return mapBackendCandidateToFrontend(response.data);
     } catch (error) {

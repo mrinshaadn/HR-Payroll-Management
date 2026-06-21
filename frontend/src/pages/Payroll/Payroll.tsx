@@ -67,19 +67,19 @@ function MetricCard({
   label: string; value: string; sub?: string; icon: React.ReactNode; color: string;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-850 transition-all hover:shadow-md">
+    <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 transition-all hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700">
       <div>
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">{label}</span>
+        <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest block">{label}</span>
         <div className="flex items-baseline gap-2 mt-1.5">
           <span className="text-2xl font-black text-slate-900 dark:text-white">{value}</span>
-          {sub && <span className={`text-[10px] font-bold ${color}`}>{sub}</span>}
+          {sub && <span className={`text-[10px] font-bold ${color.includes('blue') ? 'text-blue-600 dark:text-blue-400' : color.includes('emerald') ? 'text-emerald-600 dark:text-emerald-400' : color.includes('rose') ? 'text-rose-600 dark:text-rose-400' : color.includes('amber') ? 'text-amber-600 dark:text-amber-400' : 'text-purple-600 dark:text-purple-400'}`}>{sub}</span>}
         </div>
       </div>
-      <div className={`rounded-xl p-2.5 ${color.includes('blue') ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/40' :
-        color.includes('emerald') ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40' :
-          color.includes('rose') ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/40' :
-            color.includes('amber') ? 'bg-amber-50 text-amber-600 dark:bg-amber-950/40' :
-              'bg-purple-50 text-purple-600 dark:bg-purple-950/40'}`}>
+      <div className={`rounded-xl p-2.5 ${color.includes('blue') ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-300' :
+        color.includes('emerald') ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-300' :
+          color.includes('rose') ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-300' :
+            color.includes('amber') ? 'bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-305' :
+              'bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-300'}`}>
         {icon}
       </div>
     </div>
@@ -88,10 +88,10 @@ function MetricCard({
 
 function StatusBadge({ status }: { status: string }) {
   const cls = status === 'Paid'
-    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'
+    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900'
     : status === 'Processed'
-      ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400'
-      : 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400';
+      ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900'
+      : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900';
   return (
     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${cls}`}>
       {status}
@@ -105,7 +105,7 @@ function LoadingTable({ cols }: { cols: number }) {
       <td colSpan={cols} className="px-5 py-12 text-center">
         <div className="flex flex-col items-center gap-2">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-          <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Loading data...</span>
+          <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">Loading data...</span>
         </div>
       </td>
     </tr>
@@ -119,9 +119,9 @@ function EmptyTable({ cols, icon, title, sub }: {
     <tr>
       <td colSpan={cols} className="px-5 py-14 text-center">
         <div className="flex flex-col items-center gap-2 py-4">
-          <div className="text-slate-300">{icon}</div>
-          <p className="font-bold text-xs text-slate-700 dark:text-slate-300">{title}</p>
-          <p className="text-[10px] text-slate-400 max-w-xs leading-relaxed">{sub}</p>
+          <div className="text-slate-400 dark:text-slate-500">{icon}</div>
+          <p className="font-bold text-xs text-slate-800 dark:text-slate-205">{title}</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed">{sub}</p>
         </div>
       </td>
     </tr>
@@ -136,8 +136,8 @@ const TabButton: React.FC<{ label: string; active: boolean; onClick: () => void 
     onClick={onClick}
     className={`pb-2.5 px-4 text-xs font-bold transition-all relative whitespace-nowrap ${
       active
-        ? 'text-blue-500 font-extrabold border-b-2 border-blue-500'
-        : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+        ? 'text-blue-600 dark:text-blue-400 font-extrabold border-b-2 border-blue-600 dark:border-blue-400'
+        : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
     }`}
   >
     {label}
@@ -493,7 +493,7 @@ export default function Payroll() {
           <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-2xl">
             My Payroll
           </h1>
-          <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
             View your salary details, payroll history, and download payslips
           </p>
         </div>
@@ -534,23 +534,23 @@ export default function Payroll() {
 
         {/* Latest Salary Breakdown Card */}
         {myLatest && (
-          <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-850">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
               Salary Breakdown — {fullMonthName(myLatest.payroll_month)} {myLatest.payroll_year}
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {[
-                { label: 'Basic Salary', value: myLatest.basic_salary, color: 'text-slate-700' },
-                { label: 'House Allowance', value: myLatest.house_allowance, color: 'text-emerald-600' },
-                { label: 'Transport Allow.', value: myLatest.transport_allowance, color: 'text-emerald-600' },
-                { label: 'Medical Allow.', value: myLatest.medical_allowance, color: 'text-emerald-600' },
-                { label: 'Bonus', value: myLatest.bonus, color: 'text-blue-600' },
-                { label: 'Overtime Pay', value: myLatest.overtime_amount, color: 'text-blue-600' },
-                { label: 'Tax Deduction', value: myLatest.tax_deduction, color: 'text-rose-600' },
-                { label: 'Provident Fund', value: myLatest.provident_fund, color: 'text-rose-600' },
+                { label: 'Basic Salary', value: myLatest.basic_salary, color: 'text-slate-800 dark:text-slate-200' },
+                { label: 'House Allowance', value: myLatest.house_allowance, color: 'text-emerald-600 dark:text-emerald-400' },
+                { label: 'Transport Allow.', value: myLatest.transport_allowance, color: 'text-emerald-600 dark:text-emerald-400' },
+                { label: 'Medical Allow.', value: myLatest.medical_allowance, color: 'text-emerald-600 dark:text-emerald-400' },
+                { label: 'Bonus', value: myLatest.bonus, color: 'text-blue-600 dark:text-blue-400' },
+                { label: 'Overtime Pay', value: myLatest.overtime_amount, color: 'text-blue-600 dark:text-blue-400' },
+                { label: 'Tax Deduction', value: myLatest.tax_deduction, color: 'text-rose-600 dark:text-rose-400' },
+                { label: 'Provident Fund', value: myLatest.provident_fund, color: 'text-rose-600 dark:text-rose-400' },
               ].map(item => (
-                <div key={item.label} className="rounded-xl bg-slate-50 dark:bg-slate-800/40 p-3">
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1">{item.label}</p>
+                <div key={item.label} className="rounded-xl bg-slate-50 dark:bg-slate-800/40 p-3 border border-slate-100 dark:border-slate-800">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">{item.label}</p>
                   <p className={`text-sm font-black font-mono ${item.color}`}>{fmt(item.value)}</p>
                 </div>
               ))}
@@ -574,11 +574,11 @@ export default function Payroll() {
 
         {/* My Payroll History Table */}
         {activeEmpTab === 'MyPayroll' && (
-          <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-850">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:border-slate-800 dark:bg-slate-800/40">
+                  <tr className="border-b border-slate-200 bg-slate-50/70 text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 dark:border-slate-800 dark:bg-slate-800/40">
                     <th className="px-5 py-3.5">Period</th>
                     <th className="px-5 py-3.5">Gross Pay</th>
                     <th className="px-5 py-3.5">Allowances</th>
@@ -587,7 +587,7 @@ export default function Payroll() {
                     <th className="px-5 py-3.5 text-right">Net Pay</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-xs font-semibold dark:divide-slate-800/40">
+                <tbody className="divide-y divide-slate-200/60 text-xs font-semibold dark:divide-slate-800/60">
                   {isLoading ? <LoadingTable cols={6} /> :
                     myPayrolls.length === 0
                       ? <EmptyTable cols={6} icon={<FileText className="h-10 w-10" />} title="No payroll records found" sub="Payroll will appear here once HR processes your monthly payroll." />
@@ -596,9 +596,9 @@ export default function Payroll() {
                           <td className="px-5 py-3.5 font-bold text-slate-800 dark:text-slate-200">
                             {fullMonthName(p.payroll_month)} {p.payroll_year}
                           </td>
-                          <td className="px-5 py-3.5 font-mono text-slate-700 dark:text-slate-300">{fmt(p.gross_salary)}</td>
-                          <td className="px-5 py-3.5 font-mono text-emerald-600">+{fmt(p.total_allowances)}</td>
-                          <td className="px-5 py-3.5 font-mono text-rose-500">
+                          <td className="px-5 py-3.5 font-mono text-slate-800 dark:text-slate-200">{fmt(p.gross_salary)}</td>
+                          <td className="px-5 py-3.5 font-mono text-emerald-600 dark:text-emerald-400">+{fmt(p.total_allowances)}</td>
+                          <td className="px-5 py-3.5 font-mono text-rose-600 dark:text-rose-450">
                             -{fmt(Number(p.tax_deduction) + Number(p.provident_fund))}
                           </td>
                           <td className="px-5 py-3.5"><StatusBadge status={p.status} /></td>
@@ -616,11 +616,11 @@ export default function Payroll() {
 
         {/* My Payslips Table */}
         {activeEmpTab === 'MyPayslips' && (
-          <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-850">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:border-slate-800 dark:bg-slate-800/40">
+                  <tr className="border-b border-slate-200 bg-slate-50/70 text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 dark:border-slate-800 dark:bg-slate-800/40">
                     <th className="px-5 py-3.5">Payslip #</th>
                     <th className="px-5 py-3.5">Period</th>
                     <th className="px-5 py-3.5">Net Salary</th>
@@ -628,20 +628,20 @@ export default function Payroll() {
                     <th className="px-5 py-3.5 text-right">Download</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-xs font-semibold dark:divide-slate-800/40">
+                <tbody className="divide-y divide-slate-200/60 text-xs font-semibold dark:divide-slate-800/60">
                   {isLoading ? <LoadingTable cols={5} /> :
                     myPayslips.length === 0
                       ? <EmptyTable cols={5} icon={<FileText className="h-10 w-10" />} title="No payslips available" sub="Payslips are automatically generated when payroll is processed." />
                       : myPayslips.map(slip => (
                         <tr key={slip.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/10">
-                          <td className="px-5 py-3.5 font-mono text-blue-500 font-extrabold">{slip.payslip_number}</td>
-                          <td className="px-5 py-3.5 text-slate-700 dark:text-slate-300">
+                          <td className="px-5 py-3.5 font-mono text-blue-600 dark:text-blue-450 font-extrabold">{slip.payslip_number}</td>
+                          <td className="px-5 py-3.5 text-slate-800 dark:text-slate-200">
                             {fullMonthName(slip.payroll_month)} {slip.payroll_year}
                           </td>
                           <td className="px-5 py-3.5 font-mono font-black text-slate-900 dark:text-white">
                             {fmt(slip.net_salary)}
                           </td>
-                          <td className="px-5 py-3.5 text-slate-400">
+                          <td className="px-5 py-3.5 text-slate-500 dark:text-slate-400">
                             {new Date(slip.generated_at).toLocaleDateString('en-IN')}
                           </td>
                           <td className="px-5 py-3.5 text-right">
@@ -670,14 +670,12 @@ export default function Payroll() {
   // -----------------------------------------------------------------------
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-
-      {/* Header */}
       <div className="flex flex-col justify-between space-y-3 sm:flex-row sm:items-center sm:space-y-0">
         <div>
           <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-2xl">
             Payroll Management
           </h1>
-          <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
+          <p className="text-xs font-semibold text-slate-505 dark:text-slate-400 mt-0.5">
             Manage salary structures, process payroll cycles, and generate payslips
           </p>
         </div>
@@ -687,7 +685,7 @@ export default function Payroll() {
               resetStructureForm();
               setShowStructureModal(true);
             }}
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition-colors"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-205 transition-colors"
           >
             <Plus className="h-3.5 w-3.5 text-blue-500" />
             Salary Structure
@@ -703,7 +701,7 @@ export default function Payroll() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-100 dark:border-slate-800 pb-px gap-1 overflow-x-auto">
+      <div className="flex border-b border-slate-200 dark:border-slate-800 pb-px gap-1 overflow-x-auto">
         {([
           { id: 'Dashboard', label: 'Dashboard' },
           { id: 'Ledger', label: 'Payroll Ledger' },
@@ -717,7 +715,7 @@ export default function Payroll() {
 
       {/* Error Banner */}
       {error && (
-        <div className="flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-200 px-4 py-3 text-rose-700 text-xs font-semibold dark:bg-rose-950/20 dark:border-rose-800 dark:text-rose-400">
+        <div className="flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-200 px-4 py-3 text-rose-700 text-xs font-semibold dark:bg-rose-950/20 dark:border-rose-800 dark:text-rose-450">
           <AlertTriangle className="h-4 w-4 flex-shrink-0" />
           {error}
           <button onClick={() => setError(null)} className="ml-auto"><X className="h-3.5 w-3.5" /></button>
@@ -769,14 +767,14 @@ export default function Payroll() {
 
               {/* Monthly Trend Chart */}
               {trendChartData.length > 0 && (
-                <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-850">
-                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div className="rounded-2xl border border-slate-205 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
                     Monthly Payroll Trend ({dashboard?.current_year})
                   </h4>
                   <div className="h-52">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={trendChartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.2} />
                         <XAxis dataKey="name" stroke="#94a3b8" tick={{ fontSize: 9, fontWeight: 700 }} />
                         <YAxis stroke="#94a3b8" tick={{ fontSize: 9 }} tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
                         <Tooltip
@@ -792,21 +790,21 @@ export default function Payroll() {
 
               {/* Recent Payrolls */}
               {payrolls.length > 0 && (
-                <div className="rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-850 overflow-hidden">
-                  <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
-                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Recent Payroll Records</h4>
-                    <button onClick={() => setActiveHRTab('Ledger')} className="text-[10px] font-bold text-blue-500 hover:text-blue-700">View All →</button>
+                <div className="rounded-2xl border border-slate-205 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800">
+                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-505 dark:text-slate-400">Recent Payroll Records</h4>
+                    <button onClick={() => setActiveHRTab('Ledger')} className="text-[10px] font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">View All →</button>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                      <tbody className="divide-y divide-slate-100 text-xs font-semibold dark:divide-slate-800/40">
+                      <tbody className="divide-y divide-slate-200/60 text-xs font-semibold dark:divide-slate-800/60">
                         {payrolls.slice(0, 5).map(p => (
                           <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/10">
                             <td className="px-5 py-3">
-                              <p className="font-extrabold text-slate-800 dark:text-slate-100">{p.employee_name} {p.employee_last_name}</p>
-                              <p className="text-[9px] text-slate-400 font-mono">{p.employee_id_str}</p>
+                              <p className="font-extrabold text-slate-805 dark:text-slate-100">{p.employee_name} {p.employee_last_name}</p>
+                              <p className="text-[9px] text-slate-500 dark:text-slate-400 font-mono">{p.employee_id_str}</p>
                             </td>
-                            <td className="px-5 py-3 text-slate-500">{fullMonthName(p.payroll_month)} {p.payroll_year}</td>
+                            <td className="px-5 py-3 text-slate-600 dark:text-slate-400">{fullMonthName(p.payroll_month)} {p.payroll_year}</td>
                             <td className="px-5 py-3"><StatusBadge status={p.status} /></td>
                             <td className="px-5 py-3 text-right font-mono font-black text-slate-900 dark:text-white">{fmt(p.net_salary)}</td>
                           </tr>
@@ -835,7 +833,7 @@ export default function Payroll() {
           </div>
 
           {/* Filters */}
-          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-850 flex flex-col md:flex-row md:items-center gap-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col md:flex-row md:items-center gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <input
@@ -848,37 +846,37 @@ export default function Payroll() {
             </div>
             <div className="flex gap-2 flex-wrap">
               <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)}
-                className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-2 text-[10px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-2 text-[10px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-202">
                 <option value="All">All Months</option>
                 {Array.from({ length: 12 }, (_, i) => (
                   <option key={i + 1} value={i + 1}>{fullMonthName(i + 1)}</option>
                 ))}
               </select>
               <select value={filterYear} onChange={e => setFilterYear(e.target.value)}
-                className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-2 text-[10px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-2 text-[10px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-202">
                 <option value="All">All Years</option>
                 {[2026, 2025, 2024].map(y => <option key={y} value={y}>{y}</option>)}
               </select>
               <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-                className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-2 text-[10px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-2 text-[10px] font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-202">
                 <option value="All">All Statuses</option>
                 <option value="Draft">Draft</option>
                 <option value="Processed">Processed</option>
                 <option value="Paid">Paid</option>
               </select>
               <button onClick={() => loadHRData('Ledger')}
-                className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                 <RefreshCw className="h-3 w-3" /> Refresh
               </button>
             </div>
           </div>
 
           {/* Table */}
-          <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-850">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:border-slate-800 dark:bg-slate-800/40">
+                  <tr className="border-b border-slate-200 bg-slate-50/70 text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 dark:border-slate-800 dark:bg-slate-800/40">
                     <th className="px-5 py-3.5">Employee</th>
                     <th className="px-5 py-3.5">Period</th>
                     <th className="px-5 py-3.5">Gross Pay</th>
@@ -889,7 +887,7 @@ export default function Payroll() {
                     <th className="px-5 py-3.5 text-right">Net Pay</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-xs font-semibold dark:divide-slate-800/40">
+                <tbody className="divide-y divide-slate-200/60 text-xs font-semibold dark:divide-slate-800/60">
                   {isLoading ? <LoadingTable cols={8} /> :
                     filteredPayrolls.length === 0
                       ? <EmptyTable cols={8} icon={<AlertCircle className="h-10 w-10" />} title="No payroll entries found" sub="Run a payroll cycle or adjust filters to view records." />
@@ -902,19 +900,19 @@ export default function Payroll() {
                               </div>
                               <div>
                                 <p className="font-extrabold text-slate-800 dark:text-slate-100 leading-tight">{p.employee_name} {p.employee_last_name}</p>
-                                <p className="text-[9px] text-slate-400 font-mono mt-0.5">{p.employee_id_str}</p>
+                                <p className="text-[9px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">{p.employee_id_str}</p>
                               </div>
                             </div>
                           </td>
-                          <td className="px-5 py-3.5 text-slate-600 dark:text-slate-400">
+                          <td className="px-5 py-3.5 text-slate-700 dark:text-slate-300">
                             {fullMonthName(p.payroll_month)} {p.payroll_year}
                           </td>
-                          <td className="px-5 py-3.5 font-mono text-slate-700 dark:text-slate-300">{fmt(p.gross_salary)}</td>
-                          <td className="px-5 py-3.5 font-mono text-emerald-600">+{fmt(p.total_allowances)}</td>
-                          <td className="px-5 py-3.5 font-mono text-rose-500">
+                          <td className="px-5 py-3.5 font-mono text-slate-800 dark:text-slate-200">{fmt(p.gross_salary)}</td>
+                          <td className="px-5 py-3.5 font-mono text-emerald-600 dark:text-emerald-450">+{fmt(p.total_allowances)}</td>
+                          <td className="px-5 py-3.5 font-mono text-rose-600 dark:text-rose-450">
                             -{fmt(Number(p.tax_deduction) + Number(p.provident_fund))}
                           </td>
-                          <td className="px-5 py-3.5 font-mono text-slate-500">{fmt(p.overtime_amount)}</td>
+                          <td className="px-5 py-3.5 font-mono text-slate-700 dark:text-slate-300">{fmt(p.overtime_amount)}</td>
                           <td className="px-5 py-3.5"><StatusBadge status={p.status} /></td>
                           <td className="px-5 py-3.5 text-right font-mono font-black text-slate-900 dark:text-white">{fmt(p.net_salary)}</td>
                         </tr>
@@ -925,8 +923,8 @@ export default function Payroll() {
             </div>
             {/* Pagination */}
             {filteredPayrolls.length > pageSize && (
-              <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3 dark:border-slate-800">
-                <span className="text-[10px] font-bold text-slate-400 uppercase">
+              <div className="flex items-center justify-between border-t border-slate-200 px-5 py-3 dark:border-slate-800">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
                   {startIndex + 1}–{Math.min(startIndex + pageSize, filteredPayrolls.length)} of {filteredPayrolls.length}
                 </span>
                 <div className="flex gap-1">
@@ -946,11 +944,9 @@ export default function Payroll() {
       )}
 
       {/* ----------------------------------------------------------------- */}
-      {/* TAB: SALARY STRUCTURES                                             */}
-      {/* ----------------------------------------------------------------- */}
       {activeHRTab === 'SalaryStructures' && (
         <div className="space-y-4">
-          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-850 flex items-center gap-3">
+          <div className="rounded-2xl border border-slate-205 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex items-center gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <input type="text" placeholder="Search by employee name or ID..."
@@ -958,16 +954,16 @@ export default function Payroll() {
                 className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs text-slate-800 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
             </div>
             <button onClick={() => loadHRData('SalaryStructures')}
-              className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
               <RefreshCw className="h-3 w-3" /> Refresh
             </button>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-850">
+          <div className="overflow-hidden rounded-2xl border border-slate-205 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:border-slate-800 dark:bg-slate-800/40">
+                  <tr className="border-b border-slate-200 bg-slate-50/70 text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 dark:border-slate-800 dark:bg-slate-800/40">
                     <th className="px-5 py-3.5">Employee</th>
                     <th className="px-5 py-3.5">Basic</th>
                     <th className="px-5 py-3.5">HRA</th>
@@ -979,7 +975,7 @@ export default function Payroll() {
                     <th className="px-5 py-3.5 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-xs font-semibold dark:divide-slate-800/40">
+                <tbody className="divide-y divide-slate-200/60 text-xs font-semibold dark:divide-slate-800/60">
                   {isLoading ? <LoadingTable cols={9} /> :
                     filteredStructures.length === 0
                       ? <EmptyTable cols={9} icon={<Users className="h-10 w-10" />} title="No salary structures configured" sub="Create a salary structure to enable payroll processing for employees." />
@@ -992,21 +988,21 @@ export default function Payroll() {
                               </div>
                               <div>
                                 <p className="font-extrabold text-slate-800 dark:text-slate-100">{struct.employee_name} {struct.employee_last_name}</p>
-                                <p className="text-[9px] text-slate-400 font-mono mt-0.5">{struct.employee_id}</p>
+                                <p className="text-[9px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">{struct.employee_id}</p>
                               </div>
                             </div>
                           </td>
-                          <td className="px-5 py-3.5 font-mono text-slate-700 dark:text-slate-300">{fmt(struct.basic_salary)}</td>
-                          <td className="px-5 py-3.5 font-mono text-slate-600 dark:text-slate-400">{fmt(struct.house_allowance)}</td>
-                          <td className="px-5 py-3.5 font-mono text-slate-600 dark:text-slate-400">{fmt(struct.transport_allowance)}</td>
-                          <td className="px-5 py-3.5 font-mono text-slate-600 dark:text-slate-400">{fmt(struct.medical_allowance)}</td>
-                          <td className="px-5 py-3.5 font-mono text-blue-600">{fmt(struct.bonus)}</td>
-                          <td className="px-5 py-3.5 font-mono text-rose-500">{struct.tax_percentage}%</td>
-                          <td className="px-5 py-3.5 font-mono text-slate-500">{struct.provident_fund_percentage}%</td>
+                          <td className="px-5 py-3.5 font-mono text-slate-800 dark:text-slate-200">{fmt(struct.basic_salary)}</td>
+                          <td className="px-5 py-3.5 font-mono text-slate-700 dark:text-slate-300">{fmt(struct.house_allowance)}</td>
+                          <td className="px-5 py-3.5 font-mono text-slate-700 dark:text-slate-300">{fmt(struct.transport_allowance)}</td>
+                          <td className="px-5 py-3.5 font-mono text-slate-700 dark:text-slate-300">{fmt(struct.medical_allowance)}</td>
+                          <td className="px-5 py-3.5 font-mono text-blue-600 dark:text-blue-400">{fmt(struct.bonus)}</td>
+                          <td className="px-5 py-3.5 font-mono text-rose-600 dark:text-rose-400">{struct.tax_percentage}%</td>
+                          <td className="px-5 py-3.5 font-mono text-slate-700 dark:text-slate-300">{struct.provident_fund_percentage}%</td>
                           <td className="px-5 py-3.5 text-right">
                             <div className="flex items-center justify-end gap-1.5">
                               <button onClick={() => handleEditStructure(struct)}
-                                className="rounded-lg p-1.5 bg-slate-50 hover:bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 transition-colors"
+                                className="rounded-lg p-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 transition-colors"
                                 title="Edit">
                                 <Edit className="h-3.5 w-3.5" />
                               </button>
@@ -1032,7 +1028,7 @@ export default function Payroll() {
       {/* ----------------------------------------------------------------- */}
       {activeHRTab === 'Payslips' && (
         <div className="space-y-4">
-          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-850 flex items-center gap-3">
+          <div className="rounded-2xl border border-slate-205 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex items-center gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <input type="text" placeholder="Search by employee or payslip number..."
@@ -1040,16 +1036,16 @@ export default function Payroll() {
                 className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs text-slate-800 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
             </div>
             <button onClick={() => loadHRData('Payslips')}
-              className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
               <RefreshCw className="h-3 w-3" /> Refresh
             </button>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-850">
+          <div className="overflow-hidden rounded-2xl border border-slate-205 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:border-slate-800 dark:bg-slate-800/40">
+                  <tr className="border-b border-slate-200 bg-slate-50/70 text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 dark:border-slate-800 dark:bg-slate-800/40">
                     <th className="px-5 py-3.5">Payslip #</th>
                     <th className="px-5 py-3.5">Employee</th>
                     <th className="px-5 py-3.5">Department</th>
@@ -1059,23 +1055,23 @@ export default function Payroll() {
                     <th className="px-5 py-3.5 text-right">Download</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-xs font-semibold dark:divide-slate-800/40">
+                <tbody className="divide-y divide-slate-200/60 text-xs font-semibold dark:divide-slate-800/60">
                   {isLoading ? <LoadingTable cols={7} /> :
                     filteredPayslips.length === 0
                       ? <EmptyTable cols={7} icon={<FileText className="h-10 w-10" />} title="No payslips generated yet" sub="Payslips are auto-generated when a payroll cycle completes." />
                       : filteredPayslips.slice(startIndex, startIndex + pageSize).map(slip => (
                         <tr key={slip.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/10">
-                          <td className="px-5 py-3.5 font-mono text-blue-500 font-extrabold text-[11px]">{slip.payslip_number}</td>
+                          <td className="px-5 py-3.5 font-mono text-blue-600 dark:text-blue-450 font-extrabold text-[11px]">{slip.payslip_number}</td>
                           <td className="px-5 py-3.5">
                             <p className="font-bold text-slate-800 dark:text-slate-200">{slip.employee_name} {slip.employee_last_name}</p>
-                            <p className="text-[9px] font-mono text-slate-400">{slip.employee_id_str}</p>
+                            <p className="text-[9px] font-mono text-slate-500 dark:text-slate-400">{slip.employee_id_str}</p>
                           </td>
-                          <td className="px-5 py-3.5 text-slate-500 dark:text-slate-400">{slip.department_name || '—'}</td>
-                          <td className="px-5 py-3.5 text-slate-600 dark:text-slate-400">
+                          <td className="px-5 py-3.5 text-slate-700 dark:text-slate-300">{slip.department_name || '—'}</td>
+                          <td className="px-5 py-3.5 text-slate-700 dark:text-slate-300">
                             {fullMonthName(slip.payroll_month)} {slip.payroll_year}
                           </td>
                           <td className="px-5 py-3.5 font-mono font-black text-slate-900 dark:text-white">{fmt(slip.net_salary)}</td>
-                          <td className="px-5 py-3.5 text-slate-400">
+                          <td className="px-5 py-3.5 text-slate-500 dark:text-slate-400">
                             {new Date(slip.generated_at).toLocaleDateString('en-IN')}
                           </td>
                           <td className="px-5 py-3.5 text-right">
@@ -1092,8 +1088,8 @@ export default function Payroll() {
               </table>
             </div>
             {filteredPayslips.length > pageSize && (
-              <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3 dark:border-slate-800">
-                <span className="text-[10px] font-bold text-slate-400 uppercase">
+              <div className="flex items-center justify-between border-t border-slate-200 px-5 py-3 dark:border-slate-800">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
                   {startIndex + 1}–{Math.min(startIndex + pageSize, filteredPayslips.length)} of {filteredPayslips.length}
                 </span>
                 <div className="flex gap-1">
@@ -1124,15 +1120,15 @@ export default function Payroll() {
           ) : (
             <div className="grid gap-6 md:grid-cols-2">
               {/* Dept Spending Bar Chart */}
-              <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-850">
-                <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
                   Payroll Cost by Department
                 </h4>
                 {deptChartData.length > 0 ? (
                   <div className="h-52">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={deptChartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.2} />
                         <XAxis dataKey="name" stroke="#94a3b8" tick={{ fontSize: 9, fontWeight: 700 }} />
                         <YAxis stroke="#94a3b8" tick={{ fontSize: 9 }} tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
                         <Tooltip
@@ -1144,9 +1140,9 @@ export default function Payroll() {
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <div className="flex h-40 items-center justify-center text-xs text-slate-400">
+                  <div className="flex h-40 items-center justify-center text-xs text-slate-500 dark:text-slate-400">
                     <div className="text-center">
-                      <BarChart2 className="h-8 w-8 mx-auto mb-2 text-slate-200" />
+                      <BarChart2 className="h-8 w-8 mx-auto mb-2 text-slate-350 dark:text-slate-500" />
                       No department data for this period
                     </div>
                   </div>
@@ -1154,20 +1150,20 @@ export default function Payroll() {
               </div>
 
               {/* Financial Summary */}
-              <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-850 space-y-4">
-                <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
+                <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 pb-3 border-b border-slate-200 dark:border-slate-800">
                   Financial Summary
                 </h4>
                 {[
-                  { label: 'Average Net Salary', value: fmt(reportsData.summary?.avg_salary || 0), color: 'text-blue-600' },
-                  { label: 'Total Gross Payout', value: fmt(reportsData.summary?.total_gross || 0), color: 'text-slate-800 dark:text-slate-100' },
-                  { label: 'Total Net Payout', value: fmt(reportsData.summary?.total_payout || 0), color: 'text-emerald-600' },
-                  { label: 'Total Tax Collected', value: fmt(reportsData.summary?.total_tax || 0), color: 'text-rose-600' },
-                  { label: 'Total PF Deducted', value: fmt(reportsData.summary?.total_pf || 0), color: 'text-orange-600' },
-                  { label: 'Employees Processed', value: `${reportsData.summary?.processed_count || 0}`, color: 'text-indigo-600' },
+                  { label: 'Average Net Salary', value: fmt(reportsData.summary?.avg_salary || 0), color: 'text-blue-600 dark:text-blue-400' },
+                  { label: 'Total Gross Payout', value: fmt(reportsData.summary?.total_gross || 0), color: 'text-slate-800 dark:text-slate-200' },
+                  { label: 'Total Net Payout', value: fmt(reportsData.summary?.total_payout || 0), color: 'text-emerald-600 dark:text-emerald-400' },
+                  { label: 'Total Tax Collected', value: fmt(reportsData.summary?.total_tax || 0), color: 'text-rose-600 dark:text-rose-400' },
+                  { label: 'Total PF Deducted', value: fmt(reportsData.summary?.total_pf || 0), color: 'text-orange-600 dark:text-orange-400' },
+                  { label: 'Employees Processed', value: `${reportsData.summary?.processed_count || 0}`, color: 'text-indigo-650 dark:text-indigo-400' },
                 ].map(item => (
-                  <div key={item.label} className="flex justify-between items-center border-b border-slate-50 pb-2.5 last:border-0 dark:border-slate-800">
-                    <span className="text-xs text-slate-500">{item.label}</span>
+                  <div key={item.label} className="flex justify-between items-center border-b border-slate-100 pb-2.5 last:border-0 dark:border-slate-800">
+                    <span className="text-xs text-slate-700 dark:text-slate-300">{item.label}</span>
                     <span className={`text-xs font-extrabold font-mono ${item.color}`}>{item.value}</span>
                   </div>
                 ))}
@@ -1175,24 +1171,24 @@ export default function Payroll() {
 
               {/* Department Table */}
               {deptChartData.length > 0 && (
-                <div className="md:col-span-2 rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-850 overflow-hidden">
-                  <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
-                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Department Breakdown</h4>
+                <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+                  <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800">
+                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-505 dark:text-slate-400">Department Breakdown</h4>
                   </div>
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="bg-slate-50/70 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:bg-slate-800/40">
+                      <tr className="bg-slate-50/70 text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 dark:bg-slate-800/40">
                         <th className="px-5 py-3">Department</th>
                         <th className="px-5 py-3">Employees</th>
                         <th className="px-5 py-3 text-right">Total Net Payout</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 text-xs font-semibold">
+                    <tbody className="divide-y divide-slate-200/60 dark:divide-slate-800/60 text-xs font-semibold">
                       {deptChartData.map((d: any) => (
                         <tr key={d.name} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/10">
                           <td className="px-5 py-3 font-bold text-slate-800 dark:text-slate-200">{d.name}</td>
-                          <td className="px-5 py-3 text-slate-500">{d.Employees}</td>
-                          <td className="px-5 py-3 text-right font-mono font-bold text-slate-700 dark:text-slate-300">{fmt(d.Salary)}</td>
+                          <td className="px-5 py-3 text-slate-700 dark:text-slate-300">{d.Employees}</td>
+                          <td className="px-5 py-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">{fmt(d.Salary)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1209,27 +1205,27 @@ export default function Payroll() {
       {/* ================================================================= */}
       {showStructureModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-300 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-widest">
                 {editingStructure ? 'Update Salary Structure' : 'Create Salary Structure'}
               </h3>
               <button onClick={() => { setShowStructureModal(false); resetStructureForm(); }}
                 className="rounded-lg p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                <X className="h-4 w-4 text-slate-400" />
+                <X className="h-4 w-4 text-slate-500 dark:text-slate-400" />
               </button>
             </div>
 
             <form onSubmit={handleStructureSubmit} className="mt-4 space-y-4 max-h-[75vh] overflow-y-auto pr-1">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-450 mb-1">
                   Assign to Employee
                 </label>
                 <select
                   disabled={!!editingStructure}
                   value={structEmployeeId}
                   onChange={e => setStructEmployeeId(e.target.value)}
-                  className="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 disabled:opacity-60"
+                  className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-slate-50 px-3 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-550 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 disabled:opacity-60"
                 >
                   <option value="">Select employee...</option>
                   {employees.map(emp => (
@@ -1237,7 +1233,7 @@ export default function Payroll() {
                   ))}
                 </select>
                 {editingStructure && (
-                  <p className="text-[9px] text-slate-400 mt-1">Employee cannot be changed. Delete and recreate to reassign.</p>
+                  <p className="text-[9px] text-slate-500 dark:text-slate-400 mt-1">Employee cannot be changed. Delete and recreate to reassign.</p>
                 )}
               </div>
 
@@ -1252,33 +1248,33 @@ export default function Payroll() {
                   { label: 'Overtime Hourly Rate (₹)', value: structOvertime, set: setStructOvertime, step: '0.01' },
                 ].map(({ label, value, set, step }) => (
                   <div key={label}>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</label>
+                    <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-450 mb-1">{label}</label>
                     <input
                       required type="number" step={step} min="0" value={value}
                       onChange={e => set(Number(e.target.value))}
-                      className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                      className="h-10 w-full rounded-lg border border-slate-300 bg-slate-50 px-3 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-550 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                     />
                   </div>
                 ))}
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Tax Percentage (%)</label>
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-450 mb-1">Tax Percentage (%)</label>
                   <input required type="number" step="0.1" min="0" max="50" value={structTax}
                     onChange={e => setStructTax(Number(e.target.value))}
-                    className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
+                    className="h-10 w-full rounded-lg border border-slate-300 bg-slate-50 px-3 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-550 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
                 </div>
 
                 <div className="col-span-2">
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Provident Fund (%)</label>
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-450 mb-1">Provident Fund (%)</label>
                   <input required type="number" step="0.1" min="0" max="30" value={structPF}
                     onChange={e => setStructPF(Number(e.target.value))}
-                    className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
+                    className="h-10 w-full rounded-lg border border-slate-300 bg-slate-50 px-3 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-550 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
                 </div>
               </div>
 
               {/* Live Preview */}
-              <div className="rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-4 dark:bg-blue-950/20 dark:border-blue-900">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-2">Salary Preview</p>
+              <div className="rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-4 dark:from-blue-950/20 dark:to-indigo-950/20 dark:border-blue-900/60">
+                <p className="text-[10px] font-extrabold uppercase tracking-wider text-blue-700 dark:text-blue-400 mb-2">Salary Preview</p>
                 <div className="grid grid-cols-3 gap-2 text-[10px]">
                   {(() => {
                     const gross = structBasic + structHouse + structTransport + structMedical + structSpecial + structBonus;
@@ -1291,8 +1287,8 @@ export default function Payroll() {
                       { label: 'Net Take-home', value: fmt(net) },
                     ].map(i => (
                       <div key={i.label} className="text-center">
-                        <p className="text-blue-500 font-bold">{i.label}</p>
-                        <p className="font-black text-slate-800 dark:text-slate-100 mt-0.5">{i.value}</p>
+                        <p className="text-blue-800 dark:text-blue-450 font-bold">{i.label}</p>
+                        <p className="font-black text-slate-900 dark:text-slate-100 mt-0.5">{i.value}</p>
                       </div>
                     ));
                   })()}
@@ -1301,7 +1297,7 @@ export default function Payroll() {
 
               <div className="pt-2 flex gap-2.5">
                 <button type="button" onClick={() => { setShowStructureModal(false); resetStructureForm(); }}
-                  className="flex-1 border border-slate-200 rounded-xl py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 transition-colors">
+                  className="flex-1 border border-slate-300 rounded-xl py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 transition-colors">
                   Cancel
                 </button>
                 <button type="submit" disabled={isLoading}
@@ -1319,43 +1315,43 @@ export default function Payroll() {
       {/* ================================================================= */}
       {showProcessModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="w-full max-w-md rounded-2xl border border-slate-300 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-widest">
                 Run Payroll Cycle
               </h3>
               <button onClick={() => setShowProcessModal(false)}
                 className="rounded-lg p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800">
-                <X className="h-4 w-4 text-slate-400" />
+                <X className="h-4 w-4 text-slate-500 dark:text-slate-400" />
               </button>
             </div>
 
             <form onSubmit={handleProcessSubmit} className="mt-4 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Month</label>
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-550 dark:text-slate-450 mb-1">Month</label>
                   <select value={processMonth} onChange={e => setProcessMonth(Number(e.target.value))}
-                    className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                    className="h-10 w-full rounded-lg border border-slate-300 bg-slate-50 px-3 text-xs text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
                     {Array.from({ length: 12 }, (_, i) => (
                       <option key={i + 1} value={i + 1}>{fullMonthName(i + 1)}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Year</label>
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-550 dark:text-slate-450 mb-1">Year</label>
                   <select value={processYear} onChange={e => setProcessYear(Number(e.target.value))}
-                    className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                    className="h-10 w-full rounded-lg border border-slate-300 bg-slate-50 px-3 text-xs text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
                     {[2026, 2025, 2024].map(y => <option key={y} value={y}>{y}</option>)}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-550 dark:text-slate-450 mb-1">
                   Target Employee (optional — leave blank for all)
                 </label>
                 <select value={processEmployeeId} onChange={e => setProcessEmployeeId(e.target.value)}
-                  className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                  className="h-10 w-full rounded-lg border border-slate-300 bg-slate-50 px-3 text-xs text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
                   <option value="">All Active Employees (Batch)</option>
                   {employees.map(emp => (
                     <option key={emp.id} value={emp.id}>{emp.name} ({emp.id})</option>
@@ -1363,7 +1359,7 @@ export default function Payroll() {
                 </select>
               </div>
 
-              <label className="flex items-start gap-2.5 rounded-xl bg-amber-50 border border-amber-200 p-3 cursor-pointer dark:bg-amber-950/20 dark:border-amber-800">
+              <label className="flex items-start gap-2.5 rounded-xl bg-amber-50 border border-amber-250 p-3 cursor-pointer dark:bg-amber-950/20 dark:border-amber-900/60">
                 <input
                   type="checkbox"
                   checked={processOverride}
@@ -1371,15 +1367,15 @@ export default function Payroll() {
                   className="mt-0.5 h-3.5 w-3.5 accent-amber-500 flex-shrink-0"
                 />
                 <div>
-                  <p className="text-[10px] font-bold text-amber-700 dark:text-amber-400">Override existing records</p>
-                  <p className="text-[9px] text-amber-600 dark:text-amber-500 mt-0.5">
+                  <p className="text-[10px] font-extrabold text-amber-800 dark:text-amber-400">Override existing records</p>
+                  <p className="text-[9px] text-amber-700 dark:text-amber-550 mt-0.5">
                     If checked, deletes and recreates payroll for employees who already have records this month.
                   </p>
                 </div>
               </label>
 
-              <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 dark:bg-slate-800 dark:border-slate-700">
-                <p className="text-[9px] text-slate-500 leading-relaxed">
+              <div className="rounded-xl bg-slate-50 border border-slate-300 p-3 dark:bg-slate-800 dark:border-slate-700">
+                <p className="text-[9px] text-slate-600 dark:text-slate-400 leading-relaxed">
                   Processing payroll will calculate gross salary, deductions (tax + PF), and net pay for all employees with
                   an active salary structure. A payslip is auto-generated for each processed employee.
                 </p>
@@ -1387,7 +1383,7 @@ export default function Payroll() {
 
               <div className="flex gap-2.5">
                 <button type="button" onClick={() => setShowProcessModal(false)}
-                  className="flex-1 border border-slate-200 rounded-xl py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300">
+                  className="flex-1 border border-slate-300 rounded-xl py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300">
                   Cancel
                 </button>
                 <button type="submit" disabled={isProcessing}

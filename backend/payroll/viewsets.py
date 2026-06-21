@@ -19,11 +19,13 @@ class SalaryStructureViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
 
         # Regular employees are locked to viewing their own salary structure
-        if not (user.is_superuser or user.role in ['ADMIN', 'HR', 'MANAGER']):
+        if not (user.is_superuser or user.role in ['ADMIN', 'HR']):
             if hasattr(user, 'employee_profile'):
                 queryset = queryset.filter(employee=user.employee_profile)
             else:
                 queryset = queryset.none()
+        elif user.role == 'HR' and not user.is_superuser:
+            queryset = queryset.filter(employee__assigned_hr=user)
 
         return queryset
 
@@ -42,11 +44,13 @@ class PayrollViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
 
         # Regular employees are locked to viewing their own records
-        if not (user.is_superuser or user.role in ['ADMIN', 'HR', 'MANAGER']):
+        if not (user.is_superuser or user.role in ['ADMIN', 'HR']):
             if hasattr(user, 'employee_profile'):
                 queryset = queryset.filter(employee=user.employee_profile)
             else:
                 queryset = queryset.none()
+        elif user.role == 'HR' and not user.is_superuser:
+            queryset = queryset.filter(employee__assigned_hr=user)
 
         # Optional query param filters
         year = self.request.query_params.get('year')
@@ -86,10 +90,12 @@ class PayslipViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
 
         # Regular employees are locked to viewing their own payslips
-        if not (user.is_superuser or user.role in ['ADMIN', 'HR', 'MANAGER']):
+        if not (user.is_superuser or user.role in ['ADMIN', 'HR']):
             if hasattr(user, 'employee_profile'):
                 queryset = queryset.filter(payroll__employee=user.employee_profile)
             else:
                 queryset = queryset.none()
+        elif user.role == 'HR' and not user.is_superuser:
+            queryset = queryset.filter(payroll__employee__assigned_hr=user)
 
         return queryset

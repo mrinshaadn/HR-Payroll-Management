@@ -39,6 +39,13 @@ class Employee(models.Model):
         null=True,
         related_name='employee_profile'
     )
+    assigned_hr = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='managed_employees'
+    )
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
