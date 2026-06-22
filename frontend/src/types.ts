@@ -60,6 +60,10 @@ export interface LeaveRequest {
   startDate?: string;  // raw ISO date e.g. "2026-06-18"
   endDate?: string;    // raw ISO date e.g. "2026-06-20"
   employeeRole?: string;
+  employeeDepartment?: string;
+  employeeAssignedHR?: number;
+  approvedBy?: string;
+  rejectionReason?: string;
 }
 
 export interface AttendanceRecord {
@@ -76,6 +80,7 @@ export interface AttendanceRecord {
   employeeRole?: string;
   employeeDepartment?: string;
   employeeAssignedHR?: string;
+  date?: string;
 }
 
 export interface LoanRecord {

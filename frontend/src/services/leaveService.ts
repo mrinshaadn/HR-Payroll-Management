@@ -25,6 +25,10 @@ export const mapBackendLeaveToFrontend = (data: any): LeaveRequest => {
     startDate: data.start_date,
     endDate: data.end_date,
     employeeRole: data.employee_role,
+    employeeDepartment: data.employee_department,
+    employeeAssignedHR: data.employee_assigned_hr,
+    approvedBy: data.approved_by_name,
+    rejectionReason: data.rejection_reason,
   };
 };
 

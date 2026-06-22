@@ -65,6 +65,7 @@ export const mapBackendAttendanceToFrontend = (data: any): AttendanceRecord => {
     employeeRole: data.employee_role,
     employeeDepartment: data.employee_department,
     employeeAssignedHR: data.employee_assigned_hr_name,
+    date: data.date,
   };
 };
 

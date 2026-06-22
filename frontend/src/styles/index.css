@@ -44,18 +44,27 @@ html.dark, html.dark body {
   background-color: #162237 !important;
 }
 
+.dark .text-slate-950,
+.dark .text-slate-900,
 .dark .text-slate-800,
-.dark .text-slate-900 {
-  color: #f1f5f9 !important;
-}
-
-.dark .text-slate-950 {
+.dark .text-slate-700,
+.dark .text-white {
   color: #ffffff !important;
 }
 
+.dark .text-slate-600,
+.dark .text-slate-400,
+.dark .text-slate-350,
+.dark .text-slate-300,
+.dark .text-gray-300 {
+  color: #d1d5db !important;
+}
+
 .dark .text-slate-500,
-.dark .text-slate-600 {
-  color: #cbd5e1 !important; /* Brighter slate subtexts in dark mode */
+.dark .text-slate-550,
+.dark .text-gray-400,
+.dark .text-gray-500 {
+  color: #9ca3af !important;
 }
 
 .dark .border-slate-100 {
@@ -136,4 +145,15 @@ html.dark, html.dark body {
 }
 .dark .panel-border {
   border-color: rgba(51, 65, 85, 0.5);
+}
+
+/* Force calendar picker indicator to be white in dark mode and clearly visible */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
